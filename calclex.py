@@ -7,35 +7,37 @@
 import ply.lex as lex
 from collections import defaultdict
 # List of token names.   This is always required
-
+myfile = open('input.txt')
 reserved = {
-	'if' : 'KEYWORD_IF',
-	'else' : 'KEYWORD_ELSE',
-	'for' : 'KEYWORD_FOR',
-	'while' : 'KEYWORD_WHILE',
-	'do' : 'KEYWORD_DO',
-	'break' : 'KEYWORD_BREAK',
-	'var' : 'KEYWORD_VAR',
-	'val' : 'KEYWORD_VAL',
-	'return' : 'KEYWORD_RETURN',
-	'type' : 'KEYWORD_TYPE',
-	'import' : 'KEYWORD_IMPORT',
-	'class' : 'KEYWORD_CLASS',
-	'private' : 'KEYWORD_PRIVATE',
+	'if' 		: 'KEYWORD_IF',
+	'else' 		: 'KEYWORD_ELSE',
+	'for' 		: 'KEYWORD_FOR',
+	'while' 	: 'KEYWORD_WHILE',
+	'do' 		: 'KEYWORD_DO',
+	'break' 	: 'KEYWORD_BREAK',
+	'var' 		: 'KEYWORD_VAR',
+	'val' 		: 'KEYWORD_VAL',
+	'return' 	: 'KEYWORD_RETURN',
+	'type' 		: 'KEYWORD_TYPE',
+	'import' 	: 'KEYWORD_IMPORT',
+	'class' 	: 'KEYWORD_CLASS',
+	'private' 	: 'KEYWORD_PRIVATE',
 	'protected' : 'KEYWORD_PROTECTED',
-	'define' : 'KEYWORD_DEFINE',
-	'null' : 'KEYWORD_NULL',
-	'object' : 'KEYWORD_OBJECT',
-	'package' : 'KEYWORD_PACKAGE',
-	'case' : 'KEYWORD_CASE',
-
-	'println' : 'KEYWORD_PRINTLN',
-	'print' : 'KEYWORD_PRINT',
-	'main' : 'KEYWORD_MAIN',
-	'Array' : 'KEYWORD_ARRAY',
-	'def' : 'KEYWORD_DEF',
-	'args' : 'KEYWORD_ARGS',
-	'String': 'KEYWORD_STRING'
+	'define'	: 'KEYWORD_DEFINE',
+	'null' 		: 'KEYWORD_NULL',
+	'object' 	: 'KEYWORD_OBJECT',
+	'package' 	: 'KEYWORD_PACKAGE',
+	'case' 		: 'KEYWORD_CASE',
+	'def' 		: 'KEYWORD_DEF',
+	'new' 		: 'KEYWORD_NEW',
+	'this' 		: 'KEYWORD_THIS',
+	'with'		: 'KEYWORD_WITH',
+	'Int'		: 'TYPE_INT',
+	'Long'		: 'TYPE_LONG',
+	'String'	: 'TYPE_STRING',
+	'Float'		: 'TYPE_FLOAT',
+	'Double'	: 'TYPE_DOUBLE',
+	'Char'		: 'TYPE_CHAR'
 }
 
 tokens = [
@@ -46,39 +48,41 @@ tokens = [
    'AROP', 'RELOP','BINOP','LOGOP','ASOP',
    'IDENTIFIER',
    'COMMENT','COMMENT_BEGIN','COMMENT_END',
-    'STRING','NUMBER'
+    'STRING','INT_NUMBER','DOUBLE_NUMBER'
 ] + list(reserved.values())
 
 
 # Regular expression rules for simple tokens
-t_BINARY = r'true|false'
-
-t_AROP   = r'[-%+*/]'
-t_ASOP = r'='
+t_BINARY 	 = r'true|false'
+t_AROP   	 = r'[-%+*/]'
+t_ASOP 	 	 = r'='
 t_LPAREN     = r'\('
 t_RPAREN     = r'\)'
-t_BLOCKBEGIN     = r'\{'
-t_BLOCKEND     = r'\}'
-t_LBRAC   = r'\['
-t_RBRAC     = r'\]'
-t_COLON     = r'\:'
-t_COMMA     = r'\,'
-t_TERMINATOR     = r'\;'
-t_INST     = r'\.'
-t_STRINGID     = r'\"'
+t_BLOCKBEGIN = r'\{'
+t_BLOCKEND   = r'\}'
+t_LBRAC   	 = r'\['
+t_RBRAC      = r'\]'
+t_COLON      = r'\:'
+t_COMMA      = r'\,'
+t_TERMINATOR = r'\;'
+t_INST     	 = r'\.'
+t_STRINGID   = r'\"'
 
 t_RELOP = r'==|<=|>=|<|>|!='
-
 t_BINOP = r'&|\||~|<<|>>|>>>'
-
 t_LOGOP = r'&&|!|\|\|'
-
 t_STRING = r'".+"'
 
-def t_NUMBER(t):
-    r'\d+'
+def t_INT_NUMBER(t):
+    r'[-+]?\d+'
     t.value = int(t.value)    
     return t							
+
+def t_DOUBLE_NUMBER(t):
+    r'[-+]?[0-9]+\.?[0-9]*([eE][-+]?[0-9]+)?'
+    t.value = float(t.value)    
+    return t	
+
 
 ''' Number definition modified '''
 
@@ -95,6 +99,10 @@ def t_newline(t):
 # A string containing ignored characters (spaces and tabs)
 t_ignore  = ' \t'
 
+def t_COMMENT(t):
+	r'(/\*(.|\n)*?\*/)|(//.*)'
+	pass
+
 # Error handling rule
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
@@ -104,17 +112,7 @@ def t_error(t):
 lexer = lex.lex()
 
 # Test it out
-data = '''
-object Test {
-   def main(args: Array[String]) {
-      var x = 10;
-
-      if( x < 20 ){
-         println("This is if statement");
-      }
-   }
-}
-'''
+data = myfile.read()
 
 # Give the lexer some input
 lexer.input(data)
@@ -131,11 +129,8 @@ while True:
     	d[tok.type] = d[tok.type]+1
     else:
     	d[tok.type] = 1
-
-    e[tok.type].append(tok.value)
-
+    if (tok.value not in e[tok.type]):
+    	e[tok.type].append(tok.value)
+print("Token\tOccurrences\tLexemes\n")
 for k in d.keys():
-	e[k] = set(e[k])
-
-for k in d.keys():
-	print k,d[k],e[k]
+	print k,"\t",d[k],"\t",e[k]
