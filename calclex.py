@@ -5,9 +5,10 @@
 # numbers and +,-,*,/
 # ------------------------------------------------------------
 import ply.lex as lex
+import sys
 from collections import defaultdict
 # List of token names.   This is always required
-myfile = open('input.txt')
+myfile = open(sys.argv[1])
 reserved = {
 	'if' 		: 'KEYWORD_IF',
 	'else' 		: 'KEYWORD_ELSE',
@@ -32,6 +33,7 @@ reserved = {
 	'new' 		: 'KEYWORD_NEW',
 	'this' 		: 'KEYWORD_THIS',
 	'with'		: 'KEYWORD_WITH',
+	
 	'Int'		: 'TYPE_INT',
 	'Long'		: 'TYPE_LONG',
 	'String'	: 'TYPE_STRING',
@@ -40,15 +42,26 @@ reserved = {
 	'Char'		: 'TYPE_CHAR'
 }
 
+def t_DOUBLE_NUMBER(t):
+    r'[-+]?[0-9]+\.[0-9]*([eE][-+]?[0-9]+)?'
+    t.value = float(t.value)    
+    return t
+
+def t_INT_NUMBER(t):
+    r'[-+]?\d+'
+    t.value = int(t.value)    
+    return t
+
 tokens = [
    'LPAREN', 'RPAREN','BLOCKBEGIN','BLOCKEND',
    'LBRAC','RBRAC',
+   'INT_NUMBER','DOUBLE_NUMBER',
    'COLON','COMMA','TERMINATOR','INST','STRINGID',
    'BINARY',
    'AROP', 'RELOP','BINOP','LOGOP','ASOP',
    'IDENTIFIER',
    'COMMENT','COMMENT_BEGIN','COMMENT_END',
-    'STRING','INT_NUMBER','DOUBLE_NUMBER'
+    'STRING','CHAR'
 ] + list(reserved.values())
 
 
@@ -66,30 +79,18 @@ t_COLON      = r'\:'
 t_COMMA      = r'\,'
 t_TERMINATOR = r'\;'
 t_INST     	 = r'\.'
-t_STRINGID   = r'\"'
+t_STRING 	 = r'".+"'
+t_CHAR 		 = r'\'.\''
 
 t_RELOP = r'==|<=|>=|<|>|!='
 t_BINOP = r'&|\||~|<<|>>|>>>'
 t_LOGOP = r'&&|!|\|\|'
-t_STRING = r'".+"'
-
-def t_INT_NUMBER(t):
-    r'[-+]?\d+'
-    t.value = int(t.value)    
-    return t							
-
-def t_DOUBLE_NUMBER(t):
-    r'[-+]?[0-9]+\.?[0-9]*([eE][-+]?[0-9]+)?'
-    t.value = float(t.value)    
-    return t	
-
-
-''' Number definition modified '''
-
+ 
 def t_IDENTIFIER(t):
  	r'[_a-zA-Z][_a-zA-Z0-9]*'
  	t.type = reserved.get(t.value,'IDENTIFIER')
  	return t
+
 
 # Define a rule so we can track line numbers
 def t_newline(t):
@@ -131,6 +132,10 @@ while True:
     	d[tok.type] = 1
     if (tok.value not in e[tok.type]):
     	e[tok.type].append(tok.value)
-print("Token\tOccurrences\tLexemes\n")
-for k in d.keys():
-	print k,"\t",d[k],"\t",e[k]
+
+
+print("{0:15s} {1:10s}\tLexemes".format("Token","Occurences"))
+print('-' * 70)
+for k in sorted(d.keys()):
+	print("{0:<18s} {1:<4d} \t".format(k,d[k]),end=" ")
+	print(e[k])
