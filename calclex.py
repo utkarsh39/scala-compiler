@@ -79,17 +79,23 @@ t_COLON      = r'\:'
 t_COMMA      = r'\,'
 t_TERMINATOR = r'\;'
 t_INST     	 = r'\.'
-t_STRING 	 = r'".+"'
-t_CHAR 		 = r'\'.\''
 
 t_RELOP = r'==|<=|>=|<|>|!='
 t_BINOP = r'&|\||~|<<|>>|>>>'
 t_LOGOP = r'&&|!|\|\|'
- 
+def t_STRING(t):
+    r'".+"'
+    t.value=t.value[1:-1]
+    return t
+def t_CHAR(t):
+    r'\'.\''
+    t.value=t.value[1:-1]
+    return t
+
 def t_IDENTIFIER(t):
- 	r'[_a-zA-Z][_a-zA-Z0-9]*'
- 	t.type = reserved.get(t.value,'IDENTIFIER')
- 	return t
+        r'[_a-zA-Z][_a-zA-Z0-9]*'
+        t.type = reserved.get(t.value,'IDENTIFIER')
+        return t
 
 
 # Define a rule so we can track line numbers
