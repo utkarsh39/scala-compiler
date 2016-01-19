@@ -4,3 +4,4 @@ all: src
 	chmod +x bin/lexer
 
 clean:
+	rm bin/*

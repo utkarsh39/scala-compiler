@@ -135,8 +135,8 @@ def main():
             d[tok.type] = d[tok.type]+1
         else:
             d[tok.type] = 1
-            if (tok.value not in e[tok.type]):
-                e[tok.type].append(tok.value)
+        if (tok.value not in e[tok.type]):
+            e[tok.type].append(tok.value)
         
     print("{0:15s} {1:10s}\tLexemes".format("Token","Occurences"))
     print('-' * 70)
