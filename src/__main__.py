@@ -82,7 +82,7 @@ def main():
     t_BINOP = r'&|\||~|<<|>>|>>>'
     t_LOGOP = r'&&|!|\|\|'
     def t_STRING(t):
-        r'".+"'
+        r'"[^"\n]*"'
         t.value=t.value[1:-1]
         return t
     def t_CHAR(t):

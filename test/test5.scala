@@ -1,4 +1,3 @@
-package examples
 
 /** Quick sort, imperative style */
 object sort {
