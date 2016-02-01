@@ -24,36 +24,34 @@ def updaterd_add(reg,var):
 			rd[reg].append(var)
 	else:
 		rd[reg].append(var)
-def updaterd_del(reg,var):
+def updaterd_del(reg,var):                                             #Delete a variable entry from all registers
 	for reg in rd:
 		if(var in rd[reg]):
 			rd[reg].remove(var)
 
 def updatead_add(var,loc,type):
 	if var not in ad:
-                if(type == 'r'):
-		        ad[var].insert(0,loc)
-                elif(type == 'm'):
-                        ad[var].insert(1,loc)
-                elif(type == 's'):
-                        ad[var].append(loc)
-	elif(type == 'r'):
+                ad[var].append("-1")
+                ad[var].append("-1")
+
+        if(type == 'r'):
 		ad[var][0] = loc
-        elif type == 'm':
+        elif(type == 'm'):
                 ad[var][1] = loc
         elif(type == 's'):
                 ad[var].append(loc)
 
 def updatead_del(var,type):
-        if(type == 'r'):
-		ad[var].pop(0)
-        elif type == 'm':
-                ad[var].pop(1)
-        elif(type == 's'):
-                ad[var] = ad[var][0:2]                #Removes all the stack addresses
+        if var in ad:
+                if(type == 'r'):
+		        ad[var][0] = "-1"
+                elif type == 'm':
+                        ad[var][1] = "-1"
+                elif(type == 's'):
+                        ad[var] = ad[var][0:2]                #Removes all the stack addresses
 def del_reg(reg):                                        #Remove a register from all address descriptors
         for var in ad:
                 if ad[var][0] == reg:
-                        ad[var].pop(0)
+                        ad[var][0] = "-1"
 
 
