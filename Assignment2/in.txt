@@ -1,0 +1,9 @@
+1  =  a  2
+2  =  b  7
+3  +  a  a  b
+4  ifgoto 2 <= a  50
+5  =  b  8
+6  ret
+7  label  foo
+8  print  a
+9  ret
