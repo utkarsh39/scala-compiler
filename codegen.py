@@ -13,7 +13,7 @@ def loadaddr( y,reg):               # Loads the address of variable in y to reg
     if ( add_des[1] != '-1'):
         print " li $" + reg +"," + add_des[1]                  
     else:
-        print " li $" + reg +"," + add_des[1]
+        print " li $" + reg +"," + add_des[2]
     return
 
 def loadval( y, reg):                     # Loads the value of variable contanied in y to reg
@@ -23,7 +23,7 @@ def loadval( y, reg):                     # Loads the value of variable contanie
         elif ( add_des[1] != '-1'):
             print " lw $" + reg +"," + add_des[1]                  
         else:
-            print " lw $" + reg +"," + add_des[1]
+            print " lw $" + reg +"," + add_des[2]
         return
 def var_operation(op,z,reg):                  # value(reg) = value(reg) op (value of variable contained in z)  
         add_des = ad[z]
@@ -160,6 +160,7 @@ for line in lines:
         loadval(y,reg);
         print "li $a0, -1"
         print "xori $" + reg + ", $a0"
+
 	#elif ( op == '~'):
      #   x=line[2]
       #  y=line[3]
@@ -186,23 +187,11 @@ for line in lines:
         print "li $v0, 1\n "
         if (x.isdigit()):
             print "loadi $a0, " + int(x)
-        else: #move the value of integer to be printed to $a0
+        else: 
             lod(x,a0)
-            #add_des = ad[x]
-            #if ( add_des[0] != '-1'):
-            #    print " move $a0, $" + add_des[0]
-            #elif ( add_des[1] != '-1'):
-            #    print " lw $a0, " + add_des[1]                  
-            #else:
-            #    print " lw $a0, " + add_des[2]
         print"syscall"
 
     elif ( op == 'label'):
 
     elif ( op == 'exit'):
         print "li $v0, 10\nsyscall\n"
-
-
-
-	
-
