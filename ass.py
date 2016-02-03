@@ -38,11 +38,11 @@ def MOVE(reg,y):                    # Load the value of variable contained in y 
 			print "move " + reg + ", " + main.ad[y][0] 
 
 def COP(op,z,reg):                  # value(reg) = value(reg) op int(z)
-	print "li $a0," + int(z)
+	print "li $a0," + z
 	if(op in ['/', '*']):
-		print op + " " + regx + ', ' + regz
+		print op + " " + reg + ', $a0'
 	else:
-		print op + " " + regx + ', ' + regx + ', ' + regz
+		print op + " " + reg + ', ' + reg + ', $a0'
 
 def VOP(op,regz,regx):
 	if(op in ['/', '*']):
@@ -66,13 +66,13 @@ def XequalY(x,y):
 				print "li " + reg + ", " + y
 				UPDATE(x,reg)
 	else:       
-				if y in main.ptr:
-					main.ptr[x] = main.ptr[y]
+				if y in main.ptrmap:
+					main.ptrmap[x] = main.ptrmap[y]
 					getreg.rd_del(x)
 					getreg.clearmem(x)
 				else:
-					if x in main.ptr:
-						del main.ptr[x]
+					if x in main.ptrmap:
+						del main.ptrmap[x]
 					reg = getreg.get_regx(x,y,lno)
 					MOVE(reg,y)
 					UPDATE(x,reg)
@@ -107,11 +107,11 @@ for line in lines:
 		if line[2] not in arrays:
 			arrays[line[2]] = line[3]
 for identifier in identifiers:
-	print identifier + ":\t.word\t0"
-	main.ad[identifier] = []
+	if identifier not in arrays:
+		print identifier + ":\t.word\t0"
+		main.ad[identifier] = []
 for array in arrays:
-	print array + ":.space\t" + str(arrays[array])
-	main.ad[array] = []
+	print array + ":.space\t" + arrays[array]
 
 print ".text"
 print "main:"
@@ -122,62 +122,62 @@ for line in lines:
 	if main.get_block[lno] != main.get_block[lno-1]:
 		print "BLOCK" + str(main.get_block[lno]) + ":"
 	if (op == '='):
-		if(['&','*','['] not in line):            # x = y
+		if('[' not in line and '&' not in line and '*' not in line):            # x = y
 			x = line[2]
 			y = line[3]
 			XequalY(x,y)
-		elif ( '[' in line):                 # x[i] = y or x = y[i]
+		elif '[' in line:                 # x[i] = y or x = y[i]
 			if( line[-1] == ']'):            # x = y[i]
 				x = line[-5]
 				y = line[-4] 
 				i = line[-2]
-				reg = getreg.get_reg(x,y,i, lno)
+				reg = getreg.get_regx(x,y, lno)
 				LOADADDR(y, reg)                              ##
 				if(i.isdigit()): 
-					print "addi $" + reg + ',' + 4* int(i)
+					print "addi " + reg + ', ' + str(4*int(i))
 				else:
 					MOVE(i,a0)
 					print "loadi $a1, 4\n"
-					print " mult a0 a1\n"
+					print " mult $a0, $a1\n"
 					print "mflo $a0\n"
-					print "add $" + reg + ", a0" 
-				print "lw $" + reg + ", 0($" + reg + ')'
+					print "add " + reg + ' , ' + reg + ", $a0" 
+				print "lw " + reg + ", 0(" + reg + ')'
 				UPDATE(x,reg)
 			else:
 				x = line[2]                            # x[i] = y
 				y = line[6]
 				i = line[4]
-				reg = getreg(x,y)
+				reg = getreg.get_regx(x,y,lno)
 				LOADADDR(x,reg)
 				if(i.isdigit()): 
-					print "addi $" + reg + ',' + 4* int(i)
+					print "addi " + reg + ',' + str(4*int(i))
 				else:
 					MOVE(i,a0)
 					print "loadi $a1, 4\n"
-					print " mult a0 a1\n"
+					print " mult $a0, $a1\n"
 					print "mflo $a0\n"
-					print "add $" + reg + ", a0" 
+					print "add " + reg + ' , ' + reg + ", $a0" 
 				if(y.isdigit()):
-					print "li $a0, " + int(y)
+					print "li $a0, " + y
 				else:
 					MOVE(y,a0)
 				print "sw $a0, 0(" + reg + ')'
 		elif('&' in line):        # = x & y
 			x = line[2]
 			y = line[4]
-			main.ptr[x] = y
+			main.ptrmap[x] = y
 			getreg.rd_del(x)
 			getreg.clearmem(x)
 		elif("*" in line):        # = * x y      or = x * y
 			if(line[2] == '*'):
 				x = line[3]
 				y = line[4]
-				z = main.ptr[x]
+				z = main.ptrmap[x]
 				XequalY(z,y)
 			else:
 				x = line[2]
 				y = line[4]
-				z = main.ptr[y]
+				z = main.ptrmap[y]
 				XequalY(x,z)
 
 
@@ -220,7 +220,7 @@ for line in lines:
 		reg = getreg(x,y)
 		MOVE(y,reg);
 		print "li $a0, -1"
-		print "xori $" + reg + ", $a0"
+		print "xori " + reg + ' , ' + reg + ", $a0"
 		
 
 	elif op == "goto":
@@ -271,16 +271,13 @@ for line in lines:
 		x = line[2]
 		reg = getreg.find_reg(lno)
 		print "li $v0, 5\nsyscall"
-		print "mov $" + reg + ", $v0"
+		print "move " + reg + ", $v0"
 		UPDATE(x,reg)
 	elif ( op == 'exit'):
 		print "li $v0, 10\nsyscall"
-	if(not x.isempty() and not x.isdigit()):
+	
+	for x in line:
 		getreg.update_dead(x,lno)
-	if(not y.isempty() and not y.isdigit()):
-		getreg.update_dead(y,lno)
-	if(not z.isempty() and not z.isdigit()): 
-		getreg.update_dead(z,lno)
 print "\n"	
 
 # state -1 => new register is returned && x is in memory and not register
