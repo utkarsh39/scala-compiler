@@ -14,6 +14,11 @@ def rd_single_del(reg,var):
 	main.rd[reg].remove(var)
 	main.ad[var].remove(reg)
 
+def add(reg,var):
+	main.rd[reg].append(var)
+	main.ad[var].append(reg)
+
+
 def spill(reg):
 	for var in main.rd[reg]:
 		main.ad[var].remove(reg)
