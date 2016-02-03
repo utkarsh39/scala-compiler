@@ -255,17 +255,26 @@ for line in lines:
 				
 	elif op == 'print':
 		x = line[2]
-		print "li $v0, 1"
-		if (x.isdigit()):
-			print "li $a0, " + x
+		if (x == 'newline'):
+			print "addi $a0, $0, 0xA" 
+			print "addi $v0, $0, 0xB" 
+			print "syscall"
 		else:
-			(reg,state) = getreg.check_reg(x,lno)
-			if(state == -1):
-				print "lw " + reg + ", " + x
-				getreg.rd_del(x)
-				getreg.rd_add(reg,x)
-			print "move $a0, " + reg
-		print "syscall"
+			print "li $v0, 1"
+			if (x.isdigit()):
+				print "li $a0, " + x
+			elif x in main.ptrmap:
+				#print "ffoo"
+				print "la $a0, " + main.ptrmap[x]
+			else:
+				#print "foo"
+ 				(reg,state) = getreg.check_reg(x,lno)
+				if(state == -1):
+					print "lw " + reg + ", " + x
+					getreg.rd_del(x)
+					getreg.rd_add(reg,x)
+				print "move $a0, " + reg
+			print "syscall"
 
 	elif ( op == 'scan'):
 		x = line[2]
