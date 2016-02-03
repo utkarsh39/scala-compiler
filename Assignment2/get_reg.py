@@ -1,47 +1,54 @@
-import main
+from main import *
 def init_reg():
 	for i in range(0,10):
-		main.rd.append('$t' + str(i))
+		rd.append('$t' + str(i))
 def rd_add(reg,var):					#only adds reg into address descr. of var and var into reg descr. of reg
-	if var not in main.rd[reg]:
-		main.rd[reg].append(var)
-		main.ad[var].append(reg)
-def rd_del(var):						#Clears register fields of a variable
-	for reg in main.ad[var]:
-		main.rd[reg].remove(var)
-		main.ad[var].remove(reg)
-def rd_single_del(reg,var):
-	main.rd[reg].remove(var)
-	main.ad[var].remove(reg)
+	if var not in rd[reg]:
+		rd[reg].append(var)
+		ad[var].append(reg)
 
-def add(reg,var):
-	main.rd[reg].append(var)
-	main.ad[var].append(reg)
+def rd_del(var):						#Clears register fields of a variable
+	for reg in ad[var]:
+		rd[reg].remove(var)
+		ad[var].remove(reg)
+
+def rd_remove(reg,var):
+	if reg in ad[var]:
+		rd[reg].remove(var)
+		ad[var].remove(reg)
 
 
 def spill(reg):
-	for var in main.rd[reg]:
-		main.ad[var].remove(reg)
-		if len(main.ad[var]) == 0 and var not in main.mem:
+	for var in rd[reg]:
+		ad[var].remove(reg)
+		if len(ad[var]) == 0 and var not in mem:
 			print "\tsw\t" + reg + ", " + var + "\n"
-			main.mem.append(var)
+			mem.append(var)
 	rd[reg] = []
+
+def check_reg(var,line):
+	if len(ad[var]) == 0:
+		return find_reg(line), -1
+	else:
+		return ad[var][0], 1 
+
+
 def find_reg(line):
-	for reg in main.rd:
-		if len(main.rd[reg]) == 0:
+	for reg in rd:
+		if len(rd[reg]) == 0:
 			return reg
 	
 	temp = 100000
-	if len(main.live[line]) == 0:
-		for reg in main.rd:  
-			if len(main.rd[reg]) < temp:
-				temp = len(main.rd[reg])
+	if len(live[line]) == 0:
+		for reg in rd:  
+			if len(rd[reg]) < temp:
+				temp = len(rd[reg])
 				ind = reg		 
 	else:
-		var = main.live[line][0]
-		for reg in main.ad[var]:  
-			if len(main.rd[reg]) < temp:
-				temp = len(main.rd[reg])
+		var = live[line][0]
+		for reg in ad[var]:  
+			if len(rd[reg]) < temp:
+				temp = len(rd[reg])
 				ind = reg
 	reg = ind 
 	spill(reg)
@@ -49,25 +56,25 @@ def find_reg(line):
 
 def get_regx(x, y, line):
 
-	if len(main.rd[y]) > 1:
-		for reg in main.rd[y]:
+	if len(rd[y]) > 1:
+		for reg in rd[y]:
 			flag=1
-			for var in main.rd[reg]:
-				if len(main.ad[var]) == 1:
+			for var in rd[reg]:
+				if len(ad[var]) == 1:
 					flag = 0
 			if flag == 1:
-				rd_single_del(reg,y)
+				rd_remove(reg,y)
 				return reg
 
-	if len(main.rd[y]) == 1:
-		if y not in main.live[line]:
-			reg = main.rd[y][0]
+	if len(rd[y]) == 1:
+		if y not in live[line]:
+			reg = rd[y][0]
 			flag = 1
-			for var in main.rd[reg]:
-				if len(main.ad[var]) == 1:
+			for var in rd[reg]:
+				if len(ad[var]) == 1:
 					flag = 0
 			if flag == 1:
-				rd_single_del(reg,y)
+				rd_remove(reg,y)
 				return reg
 
 	return find_reg(line)
@@ -82,11 +89,11 @@ def get_reg(x,y,z,line):
 	return regx,regz
 
 def update_dead(var,line):
-	if var not in main.live[line]:
-		if var not in main.mem:
-			print "\tsw\t$" + main.ad[var][0] + ", " + var + "\n"
-			main.mem.append(var)
+	if var not in live[line]:
+		if var not in mem:
+			print "\tsw\t$" + ad[var][0] + ", " + var + "\n"
+			mem.append(var)
 
-		for reg in main.ad[var]:
-			main.rd[reg].remove(var)
-			main.ad[var].remove(reg)
+		for reg in ad[var]:
+			rd[reg].remove(var)
+			ad[var].remove(reg)
