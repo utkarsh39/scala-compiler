@@ -136,7 +136,7 @@ for line in lines:
 				if(i.isdigit()): 
 					print "addi " + reg + ', ' + str(4*int(i))
 				else:
-					MOVE(i,a0)
+					MOVE('$a0',i)
 					print "loadi $a1, 4\n"
 					print " mult $a0, $a1\n"
 					print "mflo $a0\n"
@@ -152,7 +152,7 @@ for line in lines:
 				if(i.isdigit()): 
 					print "addi " + reg + ',' + str(4*int(i))
 				else:
-					MOVE(i,a0)
+					MOVE('$a0',i)
 					print "loadi $a1, 4\n"
 					print " mult $a0, $a1\n"
 					print "mflo $a0\n"
@@ -160,7 +160,7 @@ for line in lines:
 				if(y.isdigit()):
 					print "li $a0, " + y
 				else:
-					MOVE(y,a0)
+					MOVE('$a0',y)
 				print "sw $a0, 0(" + reg + ')'
 		elif('&' in line):        # = x & y
 			x = line[2]
