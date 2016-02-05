@@ -1,66 +1,59 @@
+import main
+
 def generate_block():
-	f=open("in.txt",'r')
-	blockn.append(0)
-	block.append((0,0))
-	bcount = 1
+	main.get_block.append(0)
+
+	main.lines.append([])
+	main.N_BLOCKS = 0
+	main.N_LINES = 0
+
+	block = []
+	block.append(1)
+
+	f=open("test1.tac",'r')
+	
 	for line in f:
-	    lines.append(line)
-	    blockn.append(0)
+		main.lines.append(line.split())
+		main.N_LINES += 1
+		main.get_block.append(0)
+		block.append(0)
 
-	for line in lines:
-	    word=line.split()
-	    if(int(word[0])==1):
-	        temp = int(word[0])
-	        block.append((temp,0))
-	        blockn[temp] = bcount
-	        print "hi1 ",temp,bcount
-	        bcount += 1
+	main.get_block.append(0)
+	block.append(1)
 
-	    if(word[1] == "call"):
-	        '''    temp = get_line(word[2])                                           //Get line number where function begins
-	        blockn[temp] = bcount
-	        bcount += 1
-	        '''
-	    elif (word[1] == "ifgoto" or word[1] == "goto"):
-	        temp = int(word[2])
-	        block.append((temp,0))
-	        blockn[temp] = bcount
-	        print "hi2 ",temp,bcount
-	        bcount += 1
-	        temp = int(word[0]) + 1
-	        block.append((temp,0))
-	        blockn[temp] = bcount
-	        print "hi2 ",temp,bcount
-	        bcount += 1
-	i=0
-	for b in block:
-	    if(b[0]==0):
-	        continue
-	    #print b
-	    i += 1
-	    leader=b[0]
-	    tempblock = i
-	    #print "yo ",leader,tempblock
-	    temp=leader+1
-	    if(blockn[temp] != 0 ):
-	        block[i] = (leader,temp-1)
-	    while( temp <= len(lines) and blockn[temp]==0):
-	        blockn[temp] = tempblock
-	        print temp,tempblock
-	        temp += 1
-	        if(temp>len(lines)):
-	            block[i] = (leader,temp-1)
-	        elif (blockn[temp] != 0):
-	            block[i] = (leader,temp-1)
-	        if(temp>len):
-	            break
-	for b in block:
-	    print b
+	for i in range(1,main.N_LINES+1):
+		line = main.lines[i]
+		line.remove(line[0])
 
-	lines.insert(0,"")
+		if line[0] == 'label':
+			block[i] = 1
+		else:
+			if line[0] == 'call' or line[0] == 'ret':
+				block[i+1] = 1
+			else:
+				if line[0] == 'ifgoto' or line[0] == 'goto':
+					block[i+1] = 1
+					#print line[1]
+					block[int(line[1])] = 1
 
-	return bcount
+		# print i, main.lines[i]
 
-blockn=[]
-block=[]
-lines=[]
+	j = 1
+	block[1] = 1
+
+	# print len(block),main.N_LINES
+
+	# for i in range(0,main.N_LINES+2):
+		# print i, block[i]
+
+	main.start_block.append(0)
+
+	for i in range(1,main.N_LINES+2):
+		if block[i] == 1:
+			main.end_block.append(i-1)
+			main.start_block.append(i)
+			main.N_BLOCKS += 1
+		
+		main.get_block[i] = main.N_BLOCKS
+
+		# print main.get_block[i]			
