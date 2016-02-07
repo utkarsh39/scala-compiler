@@ -1,19 +1,55 @@
-1 = n 0
-2 scan n
-3 = a 2
-4 ifgoto 8 > a n
-5 call prime
-6 + a a 1
-7 goto 4
-8 exit 0
-9 label prime
-10 = t 2
-11 * s t t
-12 ifgoto 17 > s a
-13 % r a t
-14 ifgoto 19 == r 0
-15 + t t 1
-16 goto 11
-17 print a
-18 print newline
-19 ret
+1 Array p 4000004
+2 = i 0
+3 = n 0
+4 scan n
+5 ifgoto 9 > i n
+6 = p [ i ] 1
+7 + i i 1
+8 goto 5
+9 = p [ 0 ] 0
+10 = p [ 1 ] 0
+11 = ans1 0
+12 = ans2 0
+13 call sieve
+14 print ans1
+15 print newline
+16 = t 2
+17 ifgoto 21 > t n
+18 call checkprime
+19 + t t 1
+20 goto 17
+21 print ans2
+22 print newline
+23 exit 0
+24 label sieve
+25 = i 1
+26 * s i i
+27 ifgoto 38 > s n
+28 = t p [ i ]
+29 ifgoto 36 == t 0
+30 ifgoto 36 > s n
+31 = r p [ s ]
+32 ifgoto 34 == r 0
+33 = p [ s ] 0
+34 + s s i
+35 goto 30
+36 + i i 1
+37 goto 26
+38 = i 0
+39 ifgoto 45 > i n
+40 = t p [ i ]
+41 ifgoto 43 == t 0
+42 + ans1 ans1 1
+43 + i i 1
+44 goto 39
+45 ret
+46 label checkprime
+47 = i 2
+48 * s i i
+49 ifgoto 54 > s t
+50 % r t i
+51 ifgoto 55 == r 0
+52 + i i 1
+53 goto 48
+54 + ans2 ans2 1
+55 ret
