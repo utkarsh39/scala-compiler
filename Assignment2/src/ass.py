@@ -259,6 +259,7 @@ for line in lines:
 	elif op == 'label':
 		x = line[2]
 		print "\t" + x + ": "
+		print "\t" + "addi $sp, $sp, -4"
 		print "\t" + "sw $ra, 0($sp)"
 	elif op == 'ret':
 		if(len(line) > 2):                # value returning function
@@ -268,6 +269,7 @@ for line in lines:
 			else:
 				MOVE('$v0',x)
 		print "\t" + "lw $ra, 0($sp)"
+		print "\t" + "addi $sp, $sp, 4"
 		print "\t" + "jr $ra"
  	elif op == 'call':
  	 	x = line[2]          # x contains the function name
