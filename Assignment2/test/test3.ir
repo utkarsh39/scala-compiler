@@ -1,0 +1,19 @@
+1 = n 0
+2 scan n
+3 = a 2
+4 ifgoto 8 > a n
+5 call prime
+6 + a a 1
+7 goto 4
+8 exit 0
+9 label prime
+10 = t 2
+11 * s t t
+12 ifgoto 17 > s a
+13 % r a t
+14 ifgoto 19 == r 0
+15 + t t 1
+16 goto 11
+17 print a
+18 print newline
+19 ret
