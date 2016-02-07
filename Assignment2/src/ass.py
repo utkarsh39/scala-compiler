@@ -1,7 +1,7 @@
 import main
 import livegen
 import getreg
-
+import sys
 
 def NAME(op):
 	if( op == '+'):
@@ -39,13 +39,13 @@ def MOVE(reg,y):                    # Load the value of variable contained in y 
 
 def COP(op,z,reg):                  # value(reg) = value(reg) op int(z)
 	print "li $a0," + z
-	if(op in ['/', '*']):
+	if(op in ['mult', 'div']):
 		print op + " " + reg + ', $a0'
 	else:
 		print op + " " + reg + ', ' + reg + ', $a0'
 
 def VOP(op,regz,regx):
-	if(op in ['/', '*']):
+	if(op in ['mult', 'div']):
 		print op + " " + regx + ', ' + regz
 	else:
 		print op + " " + regx + ', ' + regx + ', ' + regz
@@ -76,12 +76,12 @@ def XequalY(x,y):
 					reg = getreg.get_regx(x,y,lno)
 					MOVE(reg,y)
 					UPDATE(x,reg)
-
+main.testfile=sys.argv[1]
 livegen.gen_live()
 getreg.init_reg()
 print ".data"
 
-lines = open("test1.tac","r").readlines()
+lines = open(main.testfile,"r").readlines()
 identifiers = {}
 arrays = {}
 
@@ -203,9 +203,9 @@ for line in lines:
 				if (op in ['+','-','/','*','%','&','|','^']):
 					VOP(NAME(op), regz, reg)
 				elif( op == '>>'):
-					COP('srlv', z, reg)
+					VOP('srlv', z, reg)
 				elif (op == '<<'):
-					COP('sllv', z, reg)
+					VOP('sllv', z, reg)
 				UPDATE(x,reg)
 				UPDATE(z,regz)
 			if(op == '*' or op =='/'):
@@ -253,6 +253,33 @@ for line in lines:
 				getreg.rd_add(reg,x)
 			print NAME(relop) + " " + regx + ", " + regy + ", " + "BLOCK" + str(main.get_block[branch])
 				
+	elif op == 'label':
+		x = line[2]
+		print (x + ": ")
+		print ("addi $sp, $sp, -36")
+		print ("sw $ra, 32($sp)")
+		for i in range (0,8):
+			print ("sw $s" + str(i) +", " + str(i*4) + "($sp)") 
+	elif op == 'ret':
+		if(len(line) > 2):                # value returning function
+			x = line[2]
+			if(x.isdigit()):
+				print("li $v0, " + x)
+			else:
+				MOVE('$v0',x)
+		for i in range (0,8):
+			print ("lw $s" + str(i) +", " + str(i*4) + "($sp)")
+		print ("lw $ra, 32($sp)")
+		print ("addi $sp, $sp, 36")
+		print "jr $ra"
+ 	elif op == 'call':
+ 	 	x = line[2]          # x contains the function name
+ 	 	print "jal " + x
+ 	 	if(len(line)>3):     #value returning function
+ 	 		y = line[3]
+ 	 		reg = getreg.find_reg(lno)
+			print "addi " + reg + ", $v0, 0" 
+			UPDATE(y,reg)
 	elif op == 'print':
 		x = line[2]
 		if (x == 'newline'):

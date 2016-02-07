@@ -24,7 +24,7 @@ def spill(reg):
 	for var in main.rd[reg]:
 		main.ad[var].remove(reg)
 		if len(main.ad[var]) == 0 and var not in main.mem:
-			print "sw\t" + reg + ", " + var
+			print "sw " + reg + ", " + var
 			main.mem.append(var)
 	main.rd[reg] = []
 
@@ -110,7 +110,7 @@ def update_dead(var,line):
 	#print "line =" + str(line)
 	if var not in main.live[line] and (var in main.ad) and len(main.ad[var]) >0:
 		if var not in main.mem:
-			print "sw\t" + main.ad[var][0] + ", " + var
+			print "sw " + main.ad[var][0] + ", " + var
 			main.mem.append(var)
 		for reg in main.ad[var]:
 			main.rd[reg].remove(var)
