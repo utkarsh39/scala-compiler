@@ -29,4 +29,5 @@
 29 ret
 30 * s s 2
 31 - a a 1
-32 goto 28
+32 call power
+33 ret
