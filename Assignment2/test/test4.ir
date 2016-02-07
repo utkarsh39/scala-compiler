@@ -1,0 +1,32 @@
+1 Array c 124
+2 = n 0
+3 scan n
+4 = c [ 0 ] 1
+5 = i 1
+6 ifgoto 14 > i n
+7 - i i 1
+8 = t c [ i ]
+9 * t t 2
+10 + i i 1
+11 = c [ i ] t
+12 + i i 1
+13 goto 6
+14 = t c [ n ]
+15 = r 1
+16 = a n
+17 = s 1
+18 call power
+19 print t
+20 print newline
+21 print s
+22 print newline
+23 << r r n
+24 print r
+25 print newline
+26 exit 0
+27 label power
+28 ifgoto 30 > a 0
+29 ret
+30 * s s 2
+31 - a a 1
+32 goto 28
