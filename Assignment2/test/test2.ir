@@ -4,11 +4,12 @@
 4 = t n
 5 call factorial
 6 print ans
-7 exit 0
-8 label factorial
-9 ifgoto 11 > t 0
-10 ret
-11 * ans ans t
-12 - t t 1
-13 call factorial
-14 ret
+7 print newline
+8 exit 0
+9 label factorial
+10 ifgoto 12 > t 0
+11 ret
+12 * ans ans t
+13 - t t 1
+14 call factorial
+15 ret
