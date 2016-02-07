@@ -1,0 +1,14 @@
+Requirements:
+Python3.4
+Zip utility
+
+Instructions:
+	cd assgn1
+	make
+	bin/lexer test/test<n>.scala  					// n ranges from 1 to 5
+
+To clean executables:
+	make clean
+
+
+
