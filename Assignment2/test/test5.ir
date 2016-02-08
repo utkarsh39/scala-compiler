@@ -40,6 +40,7 @@
 40 print a
 41 print newline
 42 ~ a a
-43 print a
-44 print newline
-45 exit 0
+43 = t * ptr
+44 print t
+45 print newline
+46 exit 0
