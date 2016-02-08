@@ -220,10 +220,11 @@ for line in lines:
 	elif op == '~':
 		x = line[2]
 		y = line[3]
-		reg = getreg(x,y)
-		MOVE(y,reg);
+		reg = getreg.get_regx(x,y,lno)
+		MOVE(reg,y);
 		print "\t" + "li $a0, -1"
-		print "\t" + "xori " + reg + ' , ' + reg + ", $a0"
+		print "\t" + "xor " + reg + ' , ' + reg + ", $a0"
+		UPDATE(x,reg)
 		
 
 	elif op == "goto":
