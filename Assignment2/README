@@ -1,0 +1,26 @@
+Requirements:
+				Python
+				Zip utility
+
+Instructions:
+				cd assgn2
+				make
+				bin/codegen test/test<n>.ir							where n ranges from 1 to 5
+
+To clean executables:
+				make clean
+
+Brief Description of all files:
+			blockgen.py : Identifies basic blocks and assigns block no. to each line
+			getreg.py : implements a basic-block local register allocator
+			livegen.py : computes symbol table at each line holding next use information of each variable
+			ass.py : implement the translator to translate statements in three-address code to assembly instructions
+      main.py : declaration of all variables and data structures used
+      mnemonics.org : contains design of three-address code
+			
+Brief Description of Test files:
+			test1.ir : basic array and pointer
+			test2.ir : scans n, computes factorial of n using tail-recursiom
+			test3.ir : scans n, counts the no. of primes till n using sieve and checkprime function
+			test4.ir : scans n, computes 2^(n) using arrays, tail-recursive function and bitwise leftshift
+			test5.ir : contains all arithmetic, bitwise and pointer operations
