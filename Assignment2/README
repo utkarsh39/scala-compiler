@@ -15,8 +15,8 @@ Brief Description of all files:
 			getreg.py : implements a basic-block local register allocator
 			livegen.py : computes symbol table at each line holding next use information of each variable
 			ass.py : implement the translator to translate statements in three-address code to assembly instructions
-      main.py : declaration of all variables and data structures used
-      mnemonics.org : contains design of three-address code
+			main.py : declaration of all variables and data structures used
+			mnemonics.org : contains design of three-address code
 			
 Brief Description of Test files:
 			test1.ir : basic array and pointer
