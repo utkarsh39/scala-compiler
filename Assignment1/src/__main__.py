@@ -41,12 +41,19 @@ def main():
     
 
     def t_DOUBLE_NUMBER(t):
-        r'[-+]?[0-9]+\.[0-9]*([eE][-+]?[0-9]+)?| [-+]?[0-9]+([eE][-+]?[0-9]+)'
+        r'\b[-+]?[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?([FfDd])?\b| \b[-+]?[0-9]*([eE][-+]?[0-9]+)([FfDd])?\b | [-+]?\d+[FfdD]\b'
+        if(t.value == '.'):
+             t.type = 'INST'
+             return t
+        if (t.value[-1]=='F' or t.value[-1]=='f' or t.value[-1]=='D' or t.value[-1]=='d'):
+            t.value=t.value[:-1]
         t.value = float(t.value)    
         return t
 
     def t_INT_NUMBER(t):
-        r'[-+]?\d+'
+        r'[-+]?\d+([lL])?\b'
+        if (t.value[-1]=='l' or t.value[-1]=='L'):
+            t.value=t.value[:-1]
         t.value = int(t.value)    
         return t
 
@@ -91,7 +98,7 @@ def main():
         return t
     
     def t_IDENTIFIER(t):
-        r'[_a-zA-Z][_a-zA-Z0-9]*'
+        r'\b[_a-zA-Z][_a-zA-Z0-9]*'
         t.type = reserved.get(t.value,'IDENTIFIER')
         return t
     
