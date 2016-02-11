@@ -91,7 +91,7 @@ for line in lines:
 		if line[2] not in identifiers:
 			identifiers[line[2]]=1
 	elif line[1]=='=':
-		if(['&','*','['] not in line):
+		if('[' not in line and '&' not in line and '*' not in line):
 			if line[2] not in identifiers:
 				identifiers[line[2]]=1
 		elif line[-1]==']':
