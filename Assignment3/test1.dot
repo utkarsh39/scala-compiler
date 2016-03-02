@@ -1,0 +1,9 @@
+digraph G{
+8 [label="statement -> NAME = expression"];5 [label="NAME"];8->5
+8 [label="statement -> NAME = expression"];7 [label="EQUAL"];8->7
+8 [label="statement -> NAME = expression"];3 [label="expression -> NUMBER"];8->3
+5 [label="NAME"];4 [label="a"];5->4
+7 [label="EQUAL"];6 [label="="];7->6
+3 [label="expression -> NUMBER"];2 [label="NUMBER"];3->2
+2 [label="NUMBER"];1 [label="2"];2->1
+}
