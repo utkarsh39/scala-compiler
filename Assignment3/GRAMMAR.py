@@ -348,14 +348,14 @@ def p_variable_declaration_initializer(p):
 			                            | class_initializer'''
 	p[0] = Node("variable_declaration_initializer", [p[1]])
 
-def p_variable_arguement_list(p):
-	''' variable_arguement_list : variable_declaration_initializer
-										| variable_arguement_list COMMA variable_declaration_initializer'''
+def p_variable_argument_list(p):
+	''' variable_argument_list : variable_declaration_initializer
+										| variable_argument_list COMMA variable_declaration_initializer'''
 	if len(p) == 2:
-		p[0] = Node("variable_arguement_list", [p[1]])
+		p[0] = Node("variable_argument_list", [p[1]])
 	else:
 		child1 = create_leaf("COMMA", p[2])
-		p[0] = Node("variable_arguement_list", [p[1], child1, p[3]])
+		p[0] = Node("variable_argument_list", [p[1], child1, p[3]])
 
 def p_variable_declaration_body_1(p): # eg. var [x:Int = 2+5-3;]
 			'''variable_declaration_body : variable_declarator ASOP  variable_declaration_initializer '''
@@ -363,7 +363,7 @@ def p_variable_declaration_body_1(p): # eg. var [x:Int = 2+5-3;]
 			p[0] = Node("variable_declaration_body", [p[1], child1, p[3]])
 
 def p_variable_declaration_body_2(p): # eg. var (x:Int,y:Array[String]) = (2,new Array[String](5));
-			'''variable_declaration_body : LPAREN variable_declarators RPAREN ASOP LPAREN variable_arguement_list RPAREN'''
+			'''variable_declaration_body : LPAREN variable_declarators RPAREN ASOP LPAREN variable_argument_list RPAREN'''
 	
 			child1 = create_leaf("LPAREN", p[1])
 			child2 = create_leaf("RPAREN", p[3])
@@ -374,7 +374,7 @@ def p_variable_declaration_body_2(p): # eg. var (x:Int,y:Array[String]) = (2,new
 
 
 def p_variable_declaration_body_3(p): # eg. var x = (y:Int) => y*y;  Notice, x is a function.
-	''' variable_declaration_body : IDENTIFIER ASOP LPAREN func_arguement_list_opt RPAREN FUNTYPE expression'''      
+	''' variable_declaration_body : IDENTIFIER ASOP LPAREN func_argument_list_opt RPAREN FUNTYPE expression'''      
 
 	child1 = create_leaf("IDENTIFIER", p[1])
 	child2 = create_leaf("ASOP", p[2])
@@ -723,7 +723,7 @@ def p_class_header(p):
 				p[0] = Node("class_header", [p[1], p[2]])
 
 def p_class_header_name(p):
-				'''class_header_name : class_header_name1 LPAREN constructor_arguement_list_opt RPAREN''' # class_header_name1 type_parameters
+				'''class_header_name : class_header_name1 LPAREN constructor_argument_list_opt RPAREN''' # class_header_name1 type_parameters
 														 # | class_header_name1
 				child1 = create_leaf("LPAREN", p[2])
 				child2 = create_leaf("RPAREN", p[4])
@@ -743,33 +743,33 @@ def p_class_header_extends_opt(p):
 
 
 def p_class_header_extends(p):
-				'''class_header_extends : KEYWORD_EXTENDS name LPAREN func_arguement_list_opt RPAREN'''
+				'''class_header_extends : KEYWORD_EXTENDS name LPAREN func_argument_list_opt RPAREN'''
 				child1 = create_leaf("KEYWORD_EXTENDS", p[1])
 				child2 = create_leaf("LPAREN", p[3])
 				child3 = create_leaf("RPAREN", p[5])
 				p[0] = Node("class_header_extends", [child1, p[2], child2, p[4], child3])
 
 
-def p_constructor_arguement_list_opt(p):
-	'''constructor_arguement_list_opt : constructor_arguement_list
+def p_constructor_argument_list_opt(p):
+	'''constructor_argument_list_opt : constructor_argument_list
 														| empty '''
-	p[0] = Node("constructor_arguement_list_opt", [p[1]])
+	p[0] = Node("constructor_argument_list_opt", [p[1]])
 
-def p_constructor_arguement_list(p):
-	'''constructor_arguement_list : constructor_arguement_list_declarator
-												 | constructor_arguement_list COMMA constructor_arguement_list_declarator'''
+def p_constructor_argument_list(p):
+	'''constructor_argument_list : constructor_argument_list_declarator
+												 | constructor_argument_list COMMA constructor_argument_list_declarator'''
 	if len(p) == 2:
-		p[0] = Node("constructor_arguement_list", [p[1]])
+		p[0] = Node("constructor_argument_list", [p[1]])
 	else:
 		child1 = create_leaf("COMMA", p[2])
-		p[0] = Node("constructor_arguement_list", [p[1], child1, p[3]])
+		p[0] = Node("constructor_argument_list", [p[1], child1, p[3]])
 
 
-def p_constructor_arguement_list_declarator(p):
-		'''constructor_arguement_list_declarator : declaration_keyword IDENTIFIER COLON type'''
+def p_constructor_argument_list_declarator(p):
+		'''constructor_argument_list_declarator : declaration_keyword IDENTIFIER COLON type'''
 		child1 = create_leaf("IDENTIFIER", p[2])
 		child2 = create_leaf("COLON", p[3])
-		p[0] = Node("constructor_arguement_list_declarator", [p[1], child1, child2, p[4]]) 
+		p[0] = Node("constructor_argument_list_declarator", [p[1], child1, child2, p[4]]) 
 
 def p_class_body(p):
 				'''class_body : block ''' 
@@ -783,7 +783,7 @@ def p_method_declaration(p):
 
 
 def p_method_header(p):
-				'''method_header : method_header_name LPAREN func_arguement_list_opt RPAREN COLON method_return_type ASOP'''
+				'''method_header : method_header_name LPAREN func_argument_list_opt RPAREN COLON method_return_type ASOP'''
 				child1 = create_leaf("LPAREN", p[2])
 				child2 = create_leaf("RPAREN", p[4])
 				child3 = create_leaf("COLON", p[5])
@@ -806,10 +806,10 @@ def p_method_header_name(p):
 				child2 = create_leaf("IDENTIFIER", p[3])
 				p[0] = Node("method_header_name", [p[1], child1, child2])
 
-def p_func_arguement_list_opt(p):
-	'''func_arguement_list_opt : variable_declarators
+def p_func_argument_list_opt(p):
+	'''func_argument_list_opt : variable_declarators
 														| empty '''
-	p[0] = Node("func_arguement_list_opt", [p[1]])  
+	p[0] = Node("func_argument_list_opt", [p[1]])  
 
 def p_method_body(p):
 				'''method_body : block ''' 
