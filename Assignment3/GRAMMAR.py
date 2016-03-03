@@ -60,7 +60,7 @@ def p_block_statements(p):
 			if len(p) == 2:
 				p[0] = Node("block_statement", [p[1]])
 			else:
-				p[0] = Node("block_statement", [p[1], p[2]])
+				p[0] = Node("block_statements", [p[1], p[2]])
 
 def p_block_statement(p):
 			'''block_statement : local_variable_declaration_statement
@@ -500,7 +500,8 @@ def p_normal_statement(p):
 						| expression_statement
 						| empty_statement
 						| return_statement
-						| switch_statement'''
+						| switch_statement
+						| print_statement'''
 
 	p[0] = Node("normal_statement", [p[1]])
  
@@ -690,6 +691,13 @@ def p_return_statement(p):
 				child2 = create_leaf("STATE_END", p[3])
 				p[0] = Node("return_statement", [child1, p[2], child2])
 
+def p_print_statement_1(p):
+	'''print_statement : KEYWORD_PRINT LPAREN conditional_or_expression RPAREN'''
+	child1 = create_leaf("KEYWORD_PRINT",p[1])
+	child2 = create_leaf("LPAREN",p[2])
+	child3 = create_leaf("RPAREN",p[4])
+	p[0] = Node("print_statement",[child1,child2,p[3],child3])
+
 
 # CLASS DECLARATION
 def p_class_declaration(p):
@@ -802,8 +810,9 @@ def p_empty(p):
 		pass
 
 
-LEAVES = {'KEYWORD_OBJECT',
-			'KEYWORD_EXTENDS',				
+LEAVES = {	'KEYWORD_OBJECT',
+			'KEYWORD_EXTENDS',
+			'KEYWORD_PRINT',				
 			'IDENTIFIER',
 			'BLOCKBEGIN','BLOCKEND',
 			'LBRAC','RBRAC',

@@ -35,6 +35,7 @@ reserved = {
 'yield'     : 'KEYWORD_YIELD',
 'match'     : 'KEYWORD_MATCH',
 'Array'		: 'KEYWORD_ARRAY',
+'println'	: 'KEYWORD_PRINT',
 
 'Int'		: 'TYPE_INT',
 'Long'		: 'TYPE_INT',
