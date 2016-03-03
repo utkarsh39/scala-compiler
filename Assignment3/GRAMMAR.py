@@ -691,13 +691,26 @@ def p_return_statement(p):
 				child2 = create_leaf("STATE_END", p[3])
 				p[0] = Node("return_statement", [child1, p[2], child2])
 
-def p_print_statement_1(p):
-	'''print_statement : KEYWORD_PRINT LPAREN conditional_or_expression RPAREN'''
+def p_print_statement(p):
+	'''print_statement : KEYWORD_PRINT LPAREN print_arg_list_opt RPAREN'''
 	child1 = create_leaf("KEYWORD_PRINT",p[1])
 	child2 = create_leaf("LPAREN",p[2])
 	child3 = create_leaf("RPAREN",p[4])
 	p[0] = Node("print_statement",[child1,child2,p[3],child3])
 
+def p_print_arg_list_opt(p):
+	'''print_arg_list_opt : print_arg_list
+							| empty '''
+	p[0] = Node("print_arg_list_opt", [p[1]])
+
+def p_print_arg_list(p):
+	'''print_arg_list : conditional_or_expression
+					  | print_arg_list COMMA conditional_or_expression'''
+	if len(p) ==2:
+		p[0] = Node("print_arg_list",[p[1]])
+	else:
+		child1 = create_leaf("COMMA",p[2])
+		p[0] = Node("print_arg_list",[p[1],child1,p[3]])
 
 # CLASS DECLARATION
 def p_class_declaration(p):
