@@ -14,7 +14,10 @@ def create_leaf(name1,name2):
 def p_program_structure(p):
 		'''ProgramStructure : ProgramStructure  class_and_objects
 											| class_and_objects '''
-		p[0] = Node("ProgramStructure", [p[1]])
+		if len(p) == 3:
+			p[0] = Node("ProgramStructure", [p[1], p[2]])
+		else:
+			p[0] = Node("ProgramStructure", [p[1]])
 
 def p_class_and_objects(p):
 		'''class_and_objects : SingletonObject
