@@ -103,7 +103,7 @@ code_full = f.read()
 f.close()
 
 node = parser.parse(code_full)
-f = open(sys.argv[1][:-6] + ".html","w+")
+f = open(sys.argv[1][5:-6] + ".html","w+")
 
 #Uncomment to enable genearion of Parse Tree
 #if node:
@@ -119,3 +119,5 @@ if node:
 	printnodes(node,f)
 	print >> f, '''</body>
 </html>'''
+
+f.close()

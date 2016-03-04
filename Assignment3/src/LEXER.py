@@ -35,7 +35,7 @@ reserved = {
 'yield'     : 'KEYWORD_YIELD',
 'match'     : 'KEYWORD_MATCH',
 'Array'		: 'KEYWORD_ARRAY',
-'println'	: 'KEYWORD_PRINT',
+#'println'	: 'KEYWORD_PRINT',
 
 'Int'		: 'TYPE_INT',
 'Long'		: 'TYPE_INT',
@@ -129,6 +129,7 @@ def t_STRING(t):
 	r'"[^"\n]*"'
 	t.value=t.value[1:-1]
 	return t
+
 def t_CHAR(t):
 	r'\'.\''
 	t.value=t.value[1:-1]

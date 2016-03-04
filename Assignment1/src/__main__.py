@@ -38,7 +38,7 @@ def main():
 	'Double'	: 'TYPE_DOUBLE',
 	'Char'		: 'TYPE_CHAR'
     }
-    
+
 
     def t_DOUBLE_NUMBER(t):
         r'\b[-+]?[0-9]*\.[0-9]*([eE][-+]?[0-9]+)?([FfDd])?\b| \b[-+]?[0-9]*([eE][-+]?[0-9]+)([FfDd])?\b | [-+]?\d+[FfdD]\b'

@@ -1,0 +1,10 @@
+Instructions:
+	cd asgn3
+	make
+	bin/parser test/test<n>.scala  					// n ranges from 1 to 5. Output will be test<n>.html
+
+To clean executables:
+	make clean
+
+
+
