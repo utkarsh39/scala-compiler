@@ -500,7 +500,6 @@ def p_normal_statement(p):
 						| expression_statement
 						| empty_statement
 						| return_statement
-						| switch_statement
 						| print_statement'''
 
 	p[0] = Node("normal_statement", [p[1]])
@@ -614,69 +613,6 @@ def p_for_step_opts(p):
 	else :
 		child1 = create_leaf("BY",p[1])
 		p[0]=Node("for_step_opts",[child1,p[2]])
-
-#SWITCH_STATEMENT
-def p_switch_statement( p):
-				'''switch_statement : expression KEYWORD_MATCH switch_block '''
-				child1 = create_leaf("MATCH", p[2])
-				p[0] = Node("switch_statement", [p[1], child1, p[3]])
-				
-
-def p_switch_block(p):
-				'''switch_block : BLOCKBEGIN BLOCKEND '''
-				child1 = create_leaf("BLOCKBEGIN", p[1])
-				child2 = create_leaf("BLOCKEND", p[2])
-				p[0] = Node("switch_block", [child1, child2])
-			 
-
-def p_switch_block2(p):
-				'''switch_block : BLOCKBEGIN switch_block_statements BLOCKEND '''
-				child1 = create_leaf("BLOCKBEGIN", p[1])
-				child2 = create_leaf("BLOCKEND", p[3])
-				p[0] = Node("switch_block", [child1, p[2], child2])
-			 
-
-def p_switch_block3(p):
-				'''switch_block : BLOCKBEGIN switch_labels BLOCKEND '''
-				child1 = create_leaf("BLOCKBEGIN", p[1])
-				child2 = create_leaf("BLOCKEND", p[3])
-				p[0] = Node("switch_block", [child1, p[2], child2])
-			
-
-def p_switch_block4(p):
-				'''switch_block : BLOCKBEGIN switch_block_statements switch_labels BLOCKEND '''
-				child1 = create_leaf("BLOCKBEGIN", p[1])
-				child2 = create_leaf("BLOCKEND", p[4])
-				p[0] = Node("switch_block", [child1, p[2], p[3], child2])
-			 
-
-def p_switch_block_statements(p):
-				'''switch_block_statements : switch_block_statement
-																	 | switch_block_statements switch_block_statement'''
-				if len(p) == 2:
-					p[0] = Node("switch_block_statements", [p[1]])
-				else:
-					p[0] = Node("switch_block_statements", [p[1], p[2]])
-		
-
-def p_switch_block_statement(p):
-				'''switch_block_statement : switch_labels block_statements'''
-				p[0] = Node("switch_block_statement", [p[1], p[2]])
-			 
-
-def p_switch_labels(p):
-				'''switch_labels : switch_label
-												 | switch_labels switch_label'''
-				if len(p) == 2:
-					p[0] = Node("switch_labels", [p[1]])
-				else:
-					p[0] = Node("switch_labels", [p[1], p[2]])
-
-def p_switch_label(p):
-				'''switch_label : KEYWORD_CASE expression FUNTYPE '''
-				child1 = create_leaf("CASE", p[1])
-				child2 = create_leaf("FUNTYPE", p[3])
-				p[0] = Node("switch_label", [child1, p[2], child2])
 
 #EMPTY STATEMENT
 def p_empty_statement(p):
