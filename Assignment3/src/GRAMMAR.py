@@ -105,10 +105,20 @@ def p_valid_variable(p):
 		p[0] = Node("valid_variable", [p[1]])
 
 def p_array_access(p):
-		'''array_access : name LBRAC expression RBRAC '''
-		child1 = create_leaf("LBRAC", p[2])
-		child2 = create_leaf("RBRAC", p[4])
-		p[0] = Node("array_access", [p[1], child1, p[3], child2])  
+		'''array_access : name dimension'''
+		p[0] = Node("array_access", [p[1], p[2]])
+
+def p_dimension(p):
+	'''dimension : dimension LBRAC expression RBRAC
+				 | LBRAC expression RBRAC '''
+	if len(p)==5 :
+		child1 = create_leaf("LBRAC",p[2])
+		child2 = create_leaf("RBRAC",p[4])
+		p[0] = Node("dimension",[p[1],child1,p[3],child2])
+	else:
+		child1 = create_leaf("LBRAC",p[1])
+		child2 = create_leaf("RBRAC",p[3])
+		p[0] = Node("dimension",[child1,p[2],child2]) 
 
 def p_assignment_operator(p):
 		'''assignment_operator :    ASOP 
@@ -495,19 +505,19 @@ def p_qualified_name(p):
 
 #INITIALIZERS
 def p_array_initializer(p):
-	''' array_initializer : KEYWORD_NEW KEYWORD_ARRAY LBRAC type RBRAC LPAREN INT_NUMBER RPAREN
+	''' array_initializer : KEYWORD_NEW KEYWORD_ARRAY LBRAC type RBRAC LPAREN conditional_or_expression RPAREN
 												| KEYWORD_ARRAY LPAREN argument_list_opt RPAREN
-												| KEYWORD_ARRAY LBRAC type RBRAC LPAREN argument_list_opt RPAREN '''
+												| KEYWORD_ARRAY LBRAC type RBRAC LPAREN argument_list_opt RPAREN
+												| multidimensional_array_initializer'''
 	if len(p) == 9:
 		child1 = create_leaf("NEW", p[1])
 		child2 = create_leaf("ARRAY", p[2])
 		child3 = create_leaf("LBRAC", p[3])
 		child4 = create_leaf("RBRAC", p[5])
 		child5 = create_leaf("LPAREN", p[6])
-		child6 = create_leaf("INT_CONST", p[7])
 		child7 = create_leaf("RPAREN", p[8])
 
-		p[0] = Node("array_initializer", [child1, child2, child3, p[4], child4, child5, child6, child7])
+		p[0] = Node("array_initializer", [child1, child2, child3, p[4], child4, child5, p[6], child7])
 	
 	elif len(p)==8:
 		child2 = create_leaf("ARRAY", p[1])
@@ -518,11 +528,25 @@ def p_array_initializer(p):
 
 		p[0] = Node("array_initializer", [child2, child3, p[3], child4, p[5],child7])		
 	
+	elif len(p) ==2:
+		p[0] = Node("array_initializer",[p[1]])
+
 	else:
 		child1 = create_leaf("ARRAY", p[1])
 		child2 = create_leaf("LPAREN", p[2])
 		child3 = create_leaf("RPAREN", p[4]) 
 		p[0] = Node("array_initializer", [child1, child2, p[3], child3])   
+
+def p_multidimensional_array_initializer(p):
+	''' multidimensional_array_initializer : KEYWORD_ARRAY INST KEYWORD_OFDIM LBRAC type RBRAC LPAREN argument_list RPAREN'''
+	child1 = create_leaf("ARRAY",p[1])
+	child2 = create_leaf("DOT",p[2])
+	child3 = create_leaf("OFDIM",p[3])
+	child4 = create_leaf("LBRAC",p[4])
+	child5 = create_leaf("RBRAC",p[6])
+	child6 = create_leaf("LPAREN",p[7])
+	child7 = create_leaf("RPAREN",p[9])
+	p[0] = Node("multidimensional_array_initializer",[child1,child2,child3,child4,p[5],child5,child6,p[8],child7])
 
 def p_class_initializer(p):
 	''' class_initializer : KEYWORD_NEW name LPAREN argument_list_opt RPAREN ''' 
@@ -568,15 +592,30 @@ def p_if_then_statement(p):
 	child1 = create_leaf("IF",p[1])
 	child2 = create_leaf("LPAREN",p[2])
 	child3 = create_leaf("RPAREN",p[4])
-	p[0] = Node("if_then_statement",[child1,child2,p[3],child3])
+	p[0] = Node("if_then_statement",[child1,child2,p[3],child3,p[5]])
 
 def p_if_then_else_statement(p):
-	'''if_then_else_statement : KEYWORD_IF LPAREN expression RPAREN statement KEYWORD_ELSE statement'''
-	child1 = create_leaf("IF",p[1])
-	child2 = create_leaf("LPAREN",p[2])
-	child3 = create_leaf("RPAREN",p[4])
-	child4 = create_leaf("ELSE",p[6])
-	p[0] = Node("if_then_else_statement",[child1,child2,p[3],child4,p[5],child4,p[7]]) 		 
+        '''if_then_else_statement : KEYWORD_IF LPAREN expression RPAREN if_then_else_intermediate KEYWORD_ELSE statement'''
+        child1 = create_leaf("IF", p[1])
+        child2 = create_leaf("LPAREN", p[2])
+        child3 = create_leaf("RPAREN", p[4])
+        child4 = create_leaf("ELSE", p[6])
+        p[0] = Node("if_then_else_statement", [child1, child2, p[3], child3, p[5], child4, p[7]])
+       
+
+def p_if_then_else_statement_precedence(p):
+        '''if_then_else_statement_precedence : KEYWORD_IF LPAREN expression RPAREN if_then_else_intermediate KEYWORD_ELSE if_then_else_intermediate'''
+        child1 = create_leaf("IF", p[1])
+        child2 = create_leaf("LPAREN", p[2])
+        child3 = create_leaf("RPAREN", p[4])
+        child4 = create_leaf("ELSE", p[6])
+        p[0] = Node("if_then_else_statement_precedence", [child1, child2, p[3], child3, p[5], child4, p[7]])
+      
+
+def p_if_then_else_intermediate(p):
+        '''if_then_else_intermediate : normal_statement
+                                     | if_then_else_statement_precedence'''
+        p[0] = Node("if_then_else_intermediate", [p[1]]) 		 
 
 # WHILE_LOOP
 def p_while_statement(p):
@@ -773,25 +812,24 @@ def p_fun_def2(p):
 	p[0] = Node("fun_def",[p[1],p[2]])
 
 def p_fun_sig(p):
-	'''fun_sig : simple_name fun_param_clause_opt'''
+	'''fun_sig : simple_name fun_param_clause'''
 	p[0] = Node("fun_sig",[p[1],p[2]])
 
-def p_fun_param_clause_opt(p):
-	'''fun_param_clause_opt : fun_param_clause
-							| empty'''
-	p[0] = Node("fun_param_clause_opt",[p[1]])
+# def p_fun_param_clause_opt(p):
+# 	'''fun_param_clause_opt : fun_param_clause
+# 							| empty'''
+# 	p[0] = Node("fun_param_clause_opt",[p[1]])
 
 def p_fun_param_clause(p):
-	'''fun_param_clause : LPAREN fun_params RPAREN 
-						| fun_param_clause LPAREN fun_params RPAREN'''
-	if len(p)==4:
-		child1 = create_leaf("LPAREN",p[1])
-		child2 = create_leaf("RPAREN",p[3])
-		p[0] = Node("fun_param_clause",[child1,p[2],child2])
-	else:
-		child1 = create_leaf("LPAREN",p[2])
-		child2 = create_leaf("RPAREN",p[4])
-		p[0] = Node("fun_param_clause",[p[1],child1,p[3],child2])
+	'''fun_param_clause : LPAREN fun_params_opt RPAREN  '''
+	child1 = create_leaf("LPAREN",p[1])
+	child2 = create_leaf("RPAREN",p[3])
+	p[0] = Node("fun_param_clause",[child1,p[2],child2])
+
+def p_fun_params_opt(p):
+	'''fun_params_opt : fun_params
+					| empty'''
+	p[0] = Node("fun_params_opt",[p[1]])
 
 def p_fun_params(p):
 	'''fun_params : fun_param 
@@ -838,5 +876,5 @@ LEAVES = {	'KEYWORD_OBJECT',
 			'DO','WHILE','FOR',
 			'CHOOSE','UNTIL_TO','BY','RETURN',
 			'CLASS','VOID','DEF','empty',
-			'ASOP','ASSIGN_OP'
+			'ASOP','ASSIGN_OP','OFDIM'
 			}

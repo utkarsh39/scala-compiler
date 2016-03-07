@@ -36,7 +36,7 @@ reserved = {
 'yield'     : 'KEYWORD_YIELD',
 'match'     : 'KEYWORD_MATCH',
 'Array'		: 'KEYWORD_ARRAY',
-
+'ofDim'		: 'KEYWORD_OFDIM',
 'Int'		: 'TYPE_INT',
 'Long'		: 'TYPE_INT',
 'String'	: 'TYPE_STRING',
