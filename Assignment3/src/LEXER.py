@@ -17,6 +17,7 @@ reserved = {
 'class' 	: 'KEYWORD_CLASS',
 'private' 	: 'KEYWORD_PRIVATE',
 'protected' : 'KEYWORD_PROTECTED',
+'override'	: 'KEYWORD_OVERRIDE',
 'define'	: 'KEYWORD_DEFINE',
 'null' 		: 'KEYWORD_NULL',
 'object' 	: 'KEYWORD_OBJECT',
@@ -35,7 +36,6 @@ reserved = {
 'yield'     : 'KEYWORD_YIELD',
 'match'     : 'KEYWORD_MATCH',
 'Array'		: 'KEYWORD_ARRAY',
-#'println'	: 'KEYWORD_PRINT',
 
 'Int'		: 'TYPE_INT',
 'Long'		: 'TYPE_INT',
@@ -75,7 +75,16 @@ tokens = [
 	'GREATER','LESS','GEQ','LEQ','EQUAL','NEQUAL',
 	'OR_BITWISE','AND_BITWISE','TILDA','LSHIFT','RSHIFT','XOR',
 	'AND','OR','NOT',
-	'ASOP',
+	'ASOP','TIMES_ASSIGN',
+    'DIVIDE_ASSIGN',
+    'REMAINDER_ASSIGN',
+    'PLUS_ASSIGN',
+    'MINUS_ASSIGN',
+    'LSHIFT_ASSIGN',
+    'RSHIFT_ASSIGN',
+    'AND_ASSIGN',
+    'OR_ASSIGN',
+    'XOR_ASSIGN',
 	'IDENTIFIER',
 	'COMMENT','COMMENT_BEGIN','COMMENT_END',
 	'STRING','CHAR','FUNTYPE','CHOOSE'
@@ -90,6 +99,16 @@ t_DIVIDE 	 = r'/'
 t_REMAINDER  = r'%'
 
 t_ASOP 	 	 = r'='
+t_TIMES_ASSIGN = r'\*='
+t_DIVIDE_ASSIGN = r'/='
+t_REMAINDER_ASSIGN = r'%='
+t_PLUS_ASSIGN = r'\+='
+t_MINUS_ASSIGN = r'-='
+t_LSHIFT_ASSIGN = r'<<='
+t_RSHIFT_ASSIGN = r'>>='
+t_AND_ASSIGN = r'&='
+t_OR_ASSIGN = r'\|='
+t_XOR_ASSIGN = r'\^='
 
 t_LPAREN     = r'\('
 t_RPAREN     = r'\)'
