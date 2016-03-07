@@ -248,6 +248,7 @@ def p_unary_expression(p):
 							| MINUS unary_expression
 							| unary_expression_not_plus_minus'''
 		if len(p) == 3:
+			child1 = create_leaf("UnaryOp",p[1])
 			p[0] = Node("unary_expression", [child1, p[2]])
 		else:
 			p[0] = Node("unary_expression", [p[1]])
@@ -754,8 +755,8 @@ def p_override(p):
 def p_class_declaration_keyword_opt(p):
 	'''class_declaration_keyword_opt : override_opt modifier_opts declaration_keyword 
 									 | empty '''
-	if len(p)==3:
-		p[0] = Node("class_declaration_keyword_opt",[p[1],p[2]])
+	if len(p)==4:
+		p[0] = Node("class_declaration_keyword_opt",[p[1],p[2],p[3]])
 	else:
 		p[0] = Node("class_declaration_keyword_opt",[p[1]])
 
@@ -864,7 +865,7 @@ LEAVES = {	'KEYWORD_OBJECT',
 			'BLOCKBEGIN','BLOCKEND',
 			'LBRAC','RBRAC',
 			'OR','AND','OR_BITWISE','AND_BITWISE','XOR','EqualityOp',
-			'RelationalOp','ShiftOp','AddOp','Multop','Unary10p',
+			'RelationalOp','ShiftOp','AddOp','Multop','Unary10p','UnaryOp'
 			'LPAREN','RPAREN',
 			'LiteralConst','IntFloatConst',
 			'COMMA','ModifierKeyword',
