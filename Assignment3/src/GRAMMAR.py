@@ -413,14 +413,14 @@ def p_variable_dec(p):						# eg. x:Int or x
 	child1 = create_leaf("IDENTIFIER",p[1])
 	p[0] = Node("variable_dec",[child1,p[2]])
 
-def p_variable_declaration_body_3(p): # eg. var x,y,z = (a:Int) => a*a;  Notice, x,y,z are functions.
-	''' variable_declaration_body : identifiers ASOP LPAREN fun_params RPAREN FUNTYPE expression'''      
+# def p_variable_declaration_body_3(p): # eg. var x,y,z = (a:Int) => a*a;  Notice, x,y,z are functions.
+# 	''' variable_declaration_body : identifiers ASOP LPAREN fun_params RPAREN FUNTYPE expression'''      
 
-	child2 = create_leaf("ASOP", p[2])
-	child3 = create_leaf("LPAREN", p[3])
-	child4 = create_leaf("RPAREN", p[5])
-	child5 = create_leaf("FUNTYPE", p[6])
-	p[0] = Node("variable_declaration_body", [p[1], child2, child3, p[4], child4, child5,p[7]])
+# 	child2 = create_leaf("ASOP", p[2])
+# 	child3 = create_leaf("LPAREN", p[3])
+# 	child4 = create_leaf("RPAREN", p[5])
+# 	child5 = create_leaf("FUNTYPE", p[6])
+# 	p[0] = Node("variable_declaration_body", [p[1], child2, child3, p[4], child4, child5,p[7]])
 
 
 def p_expr_opt(p):
@@ -533,36 +533,13 @@ def p_class_initializer(p):
 
 # STATEMENTS
 def p_statement(p):
-	'''statement : matched
-				 | unmatched'''
-	p[0] = Node("statement", [p[1]])
-
-def p_matched(p):
-	'''matched : KEYWORD_IF LPAREN expression RPAREN matched KEYWORD_ELSE matched
-				| normal_statement
-			 	| while_statement
-				| do_while_statement
-				| for_statement'''
-	if len(p)==2:
-		p[0] = Node("statement", [p[1]])
-	else:
-		child1 = create_leaf("IF",p[1])
-		child2 = create_leaf("LPAREN",p[2])
-		child3 = create_leaf("RPAREN",p[4])
-		child4 = create_leaf("ELSE",p[6])
-		p[0] = Node("matched",[child1,child2,p[3],child3,p[5],child4,p[7]])
-
-def p_unmatched(p):
-	'''unmatched : KEYWORD_IF LPAREN expression RPAREN statement
-				 | KEYWORD_IF LPAREN expression RPAREN matched KEYWORD_ELSE unmatched'''
-	child1 = create_leaf("IF",p[1])
-	child2 = create_leaf("LPAREN",p[2])
-	child3 = create_leaf("RPAREN",p[4])
-	if len(p)==6:
-		p[0] = Node("unmatched",[child1,child2,p[3],child3,p[5]])
-	else:
-		child4 = create_leaf("ELSE",p[6])
-		p[0] = Node("unmatched",[child1,child2,p[3],child3,p[5],child4,p[7]])
+        '''statement : normal_statement 
+                     | if_then_statement
+                     | if_then_else_statement
+                     | while_statement
+                     | do_while_statement
+                     | for_statement'''
+        p[0] = Node("statement", [p[1]])
 
 def p_normal_statement(p):
 	'''normal_statement : block 
@@ -572,8 +549,6 @@ def p_normal_statement(p):
 
 	p[0] = Node("normal_statement", [p[1]])
  
-
-
 def p_expression_statement(p):
 	'''expression_statement : statement_expression TERMINATOR'''
 	child1 = create_leaf("STATE_END", p[2])
@@ -586,7 +561,23 @@ def p_statement_expression(p):
 			
 	p[0] = Node("statement_expression", [p[1]])
 		
-			 
+	
+#IF THEN STATEMENT
+def p_if_then_statement(p):
+	'''if_then_statement : KEYWORD_IF LPAREN expression RPAREN statement'''
+	child1 = create_leaf("IF",p[1])
+	child2 = create_leaf("LPAREN",p[2])
+	child3 = create_leaf("RPAREN",p[4])
+	p[0] = Node("if_then_statement",[child1,child2,p[3],child3])
+
+def p_if_then_else_statement(p):
+	'''if_then_else_statement : KEYWORD_IF LPAREN expression RPAREN statement KEYWORD_ELSE statement'''
+	child1 = create_leaf("IF",p[1])
+	child2 = create_leaf("LPAREN",p[2])
+	child3 = create_leaf("RPAREN",p[4])
+	child4 = create_leaf("ELSE",p[6])
+	p[0] = Node("if_then_else_statement",[child1,child2,p[3],child4,p[5],child4,p[7]]) 		 
+
 # WHILE_LOOP
 def p_while_statement(p):
 	'''while_statement : KEYWORD_WHILE LPAREN expression RPAREN statement'''
@@ -761,20 +752,25 @@ def p_method_declaration1(p):
 	'''method_declaration : method_header method_body'''
 	p[0] = Node("method_declaration", [p[1], p[2]])
 
-def p_method_declaration2(p):
-	'''method_declaration : KEYWORD_DEF fun_sig block'''
-	child1 = create_leaf("DEF",p[1])
-	p[0] = Node("method_declaration",[child1,p[2],p[3]])
+# def p_method_declaration2(p):
+# 	'''method_declaration : KEYWORD_DEF fun_sig block'''
+# 	child1 = create_leaf("DEF",p[1])
+# 	p[0] = Node("method_declaration",[child1,p[2],p[3]])
 
 def p_method_header(p):
 	'''method_header : KEYWORD_DEF fun_def'''
 	child1 = create_leaf("DEF",p[1])
 	p[0] = Node("method_header",[child1,p[2]])
 
-def p_fun_def(p):
+def p_fun_def1(p):
 	'''fun_def : fun_sig type_opt ASOP'''
 	child1 = create_leaf("ASOP",p[3])
 	p[0] = Node("fun_def",[p[1],p[2],child1])
+
+def p_fun_def2(p):
+	'''fun_def : fun_sig type_opt'''
+	# child1 = create_leaf("ASOP",p[3])
+	p[0] = Node("fun_def",[p[1],p[2]])
 
 def p_fun_sig(p):
 	'''fun_sig : simple_name fun_param_clause_opt'''

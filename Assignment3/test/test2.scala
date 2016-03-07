@@ -1,6 +1,23 @@
 
 object BinarySearch {
-  def binarySearch(v: Int, vs: Array[Int]): Boolean = {
+  def sorta(a: Array[Int]) {
+
+      val t = a[i];
+      def sort1(a: Array[Int]) = {
+
+      def swap(i: Int, j: Int) = {
+        val t = a[i]; 
+        a[i] = a[j]; 
+        a[j] = t;
+      }
+
+    def println(ar: Array[Int]) = { }
+
+
+    } 
+  }
+
+  def binarySearch(a: Array[Int]){
     
     if (vs.length == 0) return false;
     var left: Int = 0;
@@ -26,17 +43,10 @@ object BinarySearch {
       
       mid = left + (right - left) / 2;
       if (v < vs[mid])
-        right = mid;
+        ;
       else
         left = mid;
     }
     return vs[left] == v;
-  }
-}
-object Main {
-  def main(args: Array[String]):Unit =  {
-  	var arr:Array[Int] = Array(1, 2, 3);
-    println(BinarySearch.binarySearch(0,arr ));
-   
   }
 }
