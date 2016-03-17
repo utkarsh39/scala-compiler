@@ -1,0 +1,20 @@
+1 = res 0
+2 = i 0
+3 goto 16
+4 = j1 0
+5 goto 13
+6 = k 0
+7 goto 10
+8 + res res 1
+9 + k k 1
+10 ifgoto 8 <= k 9
+11 goto 12
+12 + j1 j1 1
+13 ifgoto 6 <= j1 9
+14 goto 15
+15 + i i 1
+16 ifgoto 4 <= i 9
+17 goto 18
+18 print res
+19 print newline
+20 exit 0

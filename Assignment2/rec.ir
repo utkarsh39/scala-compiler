@@ -1,0 +1,15 @@
+1 = g 10
+2 call myfunc
+3 exit 0
+4 label myfunc
+5 = g0 g
+6 ifgoto 8 == g0 0
+7 goto 9
+8 ret
+9 = g1 g
+10 print g1
+11 print newline
+12 = g2 g
+13 - g3 g2 1
+14 = g g3
+15 call myfunc

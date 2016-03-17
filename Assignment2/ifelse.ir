@@ -1,0 +1,19 @@
+1 = j1 1
+2 = sum 0
+3 = i 0
+4 = j1 1
+5 goto 15
+6 % t1 j1 10
+7 ifgoto 9 == t1 0
+8 goto 12
+9 print j1
+10 print newline
+11 goto 13
+12 + sum sum i
+13 + i i 1
+14 * j1 i 2
+15 ifgoto 6 <= i 99
+16 goto 17
+17 print sum
+18 print newline
+19 exit 0
