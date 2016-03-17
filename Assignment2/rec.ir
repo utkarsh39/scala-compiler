@@ -13,3 +13,4 @@
 13 - g3 g2 1
 14 = g g3
 15 call myfunc
+16 ret
