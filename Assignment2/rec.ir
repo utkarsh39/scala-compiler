@@ -6,11 +6,13 @@
 6 ifgoto 8 == g0 0
 7 goto 9
 8 ret
-9 = g1 g
-10 print g1
-11 print newline
-12 = g2 g
-13 - g3 g2 1
-14 = g g3
-15 call myfunc
-16 ret
+9 =s s "value of g is "
+10 print s
+11 = g1 g
+12 print g1
+13 print newline
+14 = g2 g
+15 - g3 g2 1
+16 = g g3
+17 call myfunc
+18 ret

@@ -97,19 +97,26 @@ for line in lines:
 		elif line[-1]==']':
 			if line[2] not in identifiers:
 				identifiers[line[2]]=1
-		elif line[3] in ['&','*'] :
-			if line[2] not in identifiers:
-				identifiers[line[2]]=1
 		elif line[2] == '*':
 			if line[3] not in identifiers:
 				identifiers[line[3]]=1
+		elif line[3] in ['&','*'] :
+			if line[2] not in identifiers:
+				identifiers[line[2]]=1
+
+	if line[1]=="=s":
+			print line[2] + ":\t.asciiz " +  " ".join(line[3:])
+	
 	elif line[1]== 'Array':
 		if line[2] not in arrays:
 			arrays[line[2]] = line[3]
+
 for identifier in identifiers:
 	if identifier not in arrays:
-		print identifier + ":\t.word\t0"
-		main.ad[identifier] = []
+		if identifiers[identifier] == 1:
+			print identifier + ":\t.word\t0"
+			main.ad[identifier] = []
+
 for array in arrays:
 	print array + ":\t.space\t" + arrays[array]
 
@@ -287,7 +294,10 @@ for line in lines:
 			print "\t" + "addi $v0, $0, 0xB" 
 			print "\t" + "syscall"
 		else:
-			print "\t" + "li $v0, 1"
+			if x not in identifiers:
+				print "\t" + "li $v0, 4"
+			else:
+				print "\t" + "li $v0, 1"
 			if (x.isdigit()):
 				print "\t" + "li $a0, " + x
 			elif x in main.ptrmap:
@@ -295,14 +305,16 @@ for line in lines:
 				print "\t" + "la $a0, " + main.ptrmap[x]
 			else:
 				#print "foo"
- 				(reg,state) = getreg.check_reg(x,lno)
-				if(state == -1):
-					print "\t" + "lw " + reg + ", " + x
-					getreg.rd_del(x)
-					getreg.rd_add(reg,x)
-				print "\t" + "move $a0, " + reg
+				if x not in identifiers:
+					print "\t" + "la $a0, " + x
+				else:
+	 				(reg,state) = getreg.check_reg(x,lno)
+					if(state == -1):
+						print "\t" + "lw " + reg + ", " + x
+						getreg.rd_del(x)
+						getreg.rd_add(reg,x)
+					print "\t" + "move $a0, " + reg
 			print "\t" + "syscall"
-
 	elif ( op == 'scan'):
 		x = line[2]
 		reg = getreg.find_reg(lno)
