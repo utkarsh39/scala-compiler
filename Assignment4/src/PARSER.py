@@ -51,7 +51,7 @@ for i in range(1,len(TAC)):
 print '\n'
 print '\n'
 
-variable_list = {}
+variable_list = {} 				# gives info about parameters and local variables of function with name as per 3AC
 
 for i in range(1,len(dict_symboltable) + 1):
 	d = dict_symboltable[i].table
