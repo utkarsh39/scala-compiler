@@ -1,0 +1,32 @@
+1 label fun1
+2 = t3 0
+3 ifgoto 5 < t1 t2
+4 goto 11
+5 + t4 t1 t2
+6 = t1 t4
+7 - t5 t1 t2
+8 = t2 t5
+9 - t6 t1 t2
+10 = t1 t6
+11 ifgoto 13 == t2 0
+12 goto 15
+13 = t3 t1
+14 goto 24
+15 % t7 t1 t2
+16 = t3 t7
+17 ifgoto 19 != t3 0
+18 goto 24
+19 % t8 t1 t2
+20 param t2
+21 param t8
+22 call fun1
+23 = t3 return
+24 ret t3
+25 label main
+26 param 4
+27 param 10
+28 call fun1
+29 = t9 return
+30 print t9
+31 print newline
+32 exit 0

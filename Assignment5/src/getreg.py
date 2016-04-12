@@ -1,5 +1,5 @@
 import main
-import ass
+
 def init_reg():
 	for i in range(0,10):
 		main.rd['$t' + str(i)] = []
@@ -25,7 +25,7 @@ def spill(reg):
 	for var in main.rd[reg]:
 		main.ad[var].remove(reg)
 		if len(main.ad[var]) == 0 and var not in main.mem:
-			print "\t" + "sw " + reg + ", " + ass.getmem(var)
+			print "\t" + "sw " + reg + ", " + main.memad[var]
 			main.mem.append(var)
 	main.rd[reg] = []
 
@@ -111,7 +111,7 @@ def update_dead(var,line):
 	#print "line =" + str(line)
 	if var not in main.live[line] and (var in main.ad) and len(main.ad[var]) >0:
 		if var not in main.mem:
-			print "\t" + "sw " + main.ad[var][0] + ", " + ass.getmem(var)
+			print "\t" + "sw " + main.ad[var][0] + ", " + main.memad[var]
 			main.mem.append(var)
 		for reg in main.ad[var]:
 			main.rd[reg].remove(var)

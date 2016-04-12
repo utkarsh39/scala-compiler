@@ -14,3 +14,4 @@ free_reg = []
 ptrmap = {}
 regline={}
 testfile=""
+memad = {}

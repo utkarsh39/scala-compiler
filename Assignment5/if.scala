@@ -1,16 +1,28 @@
-object main {
-	var a:Array[Int] = Array[Int](1,2,3);
-	var i:Int = 0;
-	var j:Int = 0;
+object program {
+	def gcd(a:Int, b:Int):Int = {
+		var g:Int = 0;
 
-	if(i <= 3){
-		a[i] = a[i] + 1;
+		if (a < b){
+			a = a + b;
+			b = a - b;
+			a = a - b; 
+		}
+
+		if(b == 0){
+			g = a;
+		}
+		else{
+			g = a % b;
+
+			if(g != 0){
+				g = gcd(b,a%b);
+			}
+		}
+
+		return g;
 	}
-	
-	if(i >= 2){
-		a[i] = a[i] - 1;
-	}
-	else{
-		a[i] = 1;
+
+	def main():Unit = {
+		var g:Int = gcd(4,10);
 	}
 }

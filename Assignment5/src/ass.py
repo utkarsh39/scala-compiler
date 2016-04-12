@@ -2,7 +2,8 @@ import main
 import livegen
 import getreg
 import sys
-import PARSER
+import cPickle as pickle
+
 def NAME(op):
 	if( op == '+'):
 		return "add"
@@ -32,7 +33,7 @@ def NAME(op):
 		return "bne"
 
 def MOVE(reg,y):                    # Load the value of variable contained in y to reg
-	if len(main.ad[y])==0:
+	if len(main.ad[y])==0 and y != 'return':
 		print "\t" + "lw " + reg + ", " + getmem(y)
 	elif (reg!= main.ad[y][0]):
 			print "\t" + "move " + reg + ", " + main.ad[y][0] 
@@ -57,7 +58,7 @@ def UPDATE(x,reg):
 	getreg.rd_add(reg,x)
 
 def LOADADDR(y, reg):
-	if y not in PARSER.variable_list:
+	if y not in variable_list:
 		print "\t" + "la " + reg +", " + y
 	else:
 		y = getmem(y)
@@ -77,10 +78,17 @@ def XequalY(x,y):
 				else:
 					if x in main.ptrmap:
 						del main.ptrmap[x]
-					reg = getreg.get_regx(x,y,lno)
+
+					if y != 'return':
+						reg = getreg.get_regx(x,y,lno)
+					else:
+						reg = getreg.find_reg(lno)
+	
 					MOVE(reg,y)
 					UPDATE(x,reg)
-main.testfile=sys.argv[1]
+
+filename = sys.argv[1]
+main.testfile = sys.argv[1] + '.ir'
 livegen.gen_live()
 getreg.init_reg()
 print "\t" + ".data"
@@ -115,17 +123,19 @@ for line in lines:
 		if line[2] not in arrays:
 			arrays[line[2]] = line[3]
 
+variable_list = pickle.load(open(filename + '_var_list.p', 'rb'))
+
 for identifier in identifiers:
 	if identifier not in arrays:
 		if identifiers[identifier] == 1:
-			if identifier not in PARSER.variable_list:
+			if identifier not in variable_list:
 				print identifier + ":\t.word\t0"
-				mem[identifier] = identifier
+				main.memad[identifier] = identifier
 			main.ad[identifier] = []
 
 for array in arrays:
-	if array not in PARSER.variable_list:
-		mem[array] = array
+	if array not in variable_list:
+		main.memad[array] = array
 		print array + ":\t.space\t" + arrays[array]
 
 print "\n"
@@ -133,30 +143,36 @@ print "\n"
 print "\t" + ".text"
 #print "main:"
 
-mem = {}
-for i in PARSER.function_list:
-	fun = PARSER.function_list[i]
+
+function_list = pickle.load(open(filename + '_func_list.p', 'rb'))
+
+for i in function_list:
+	fun = function_list[i]
 	size = 0
 	for variable in fun['local']:
 		if fun['local'][variable]['type'] == 'array':
-			size - = 4 * int(fun['local'][variable]['size'])
+			size -= 4 * int(fun['local'][variable]['size'])
 		else:
 			size -= 4
-		mem[variable] = str(size) + '($fp)'
+		main.memad[variable] = str(size) + '($fp)'
 	
 	size = 12 + (len(fun['param'])-1)*4
-	for i in range(0,len(fun['param'])):
-		mem[fun['param'][i]] = str(size) + '($fp)'
+
+	for i in range(1,len(fun['param']) + 1):
+		main.memad[fun['param'][i]] = str(size) + '($fp)'
 		size += 4
 
-	function_list[fun]
+main.memad['return'] = '$v0'
+main.ad['return'] = ['$v0']
 
 def getmem(x):
-	return mem[x]
+	return main.memad[x]
 
 
 for line in lines:
 	line = line.split()
+	if len(line) == 0:
+		break
 	lno = int(line[0])
 	# print lno
 	op = line[1]
@@ -297,9 +313,10 @@ for line in lines:
 				
 	elif op == 'param' :
 		x = line[2]
-		print "\t" + "addi $sp, $sp, -4"
 		if (x.isdigit()):
+			print "\t" + "addi $sp, $sp, -4"
 			print "\t" + "li $a0, ", x
+			print "\t" + "sw $a0, 0($sp)"
 		else:
 			print "\t" + "addi $sp, $sp, -4"
 			print "\t" + "lw $a0," + getmem(x)
@@ -310,12 +327,12 @@ for line in lines:
 		x = line[2]
 		print "\t" + x + ": "
 		print "\t" + "addi $sp, $sp, -12"
-		print "\t" + "li $a0," + PARSER.function_list[x]['paramsize']
+		print "\t" + "li $a0," + str(function_list[x]['paramsize'])
 		print "\t" + "sw $a0, 8($sp)"
  		print "\t" + "sw $fp, 4($sp)"
 		print "\t" + "sw $ra, 0($sp)"
 		print "\t" + "addi $fp, $sp, 0 "
-		print "\t" + "addi $sp," + PARSER.function_list[x]['localsize']
+		print "\t" + "addi $sp," + str(function_list[x]['localsize'])
 
 	elif op == 'ret':
 		if(len(line) > 2):                # value returning function
@@ -375,6 +392,8 @@ for line in lines:
 		print "\t" + "li $v0, 10\n" + "\t" + "syscall"
 	
 	for x in line:
+		if x == 'return':
+			continue
 		getreg.update_dead(x,lno)
 print "\n"	
 
