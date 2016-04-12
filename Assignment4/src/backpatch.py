@@ -5,25 +5,15 @@ def getscope(id):
 		global dict_symboltable
 		return dict_symboltable[id]
 
-def getscopebyname(name, scope):
-	if name in scope.table:
-		global dict_symboltable
-		return dict_symboltable[scope.table[name]['tid']]
-	else:
-		if scope.pid == 0:
-			raise Exception('function' + name + 'not declared')
-		else:
-			return getscopebyname(name, getscope(scope.pid))
-
-def check_validity(var,scope):
+def check_validity(var,scope,vartype):
 	if var in scope.table:
 		return (scope.table[var])['place']
 	else :
 		if scope.pid == 0:
-			print 'Variable ',var,' not declared.'
+			print vartype ,var,' not declared.'
 			raise Exception("Correct the Semantics :P")
 		
-		return check_validity(var, getscope(scope.pid)) 
+		return check_validity(var, getscope(scope.pid), vartype) 
 
 class Env:
 	tablecount = 1
@@ -123,7 +113,6 @@ def p_SingletonObject(p):
 	tempdict = {}
 	tempdict['name'] = p[1].place
 	tempdict['type'] = 'object'
-	tempdict['tid'] = CSCOPE.id
 	SCOPE.addentry(tempdict)
 
 def p_object_declare(p):
@@ -232,7 +221,7 @@ def p_valid_variable(p):
 		'''valid_variable : name'''
 		p[0] = Node("valid_variable", [p[1]],place = p[1].place)
 		global SCOPE
-		tempvar = check_validity(p[1].place, SCOPE)
+		tempvar = check_validity(p[1].place, SCOPE, 'variable')
 		
 		p[0].place = tempvar
 
@@ -244,7 +233,7 @@ def p_array_access(p):
 		'''array_access : name dimension'''
 		p[0] = Node("array_access", [p[1], p[2]])
 		global SCOPE
-		tempvar = check_validity(p[1].place, SCOPE)
+		tempvar = check_validity(p[1].place, SCOPE, 'variable')
 		p[0].place = tempvar + ' ' + p[2].place
 
 def p_dimension(p):
@@ -566,9 +555,9 @@ def p_int_float(p):
 		'''int_float : DOUBLE_NUMBER
 					 | INT_NUMBER '''
 		child1 = create_leaf("IntFloatConst", p[1])
-		tempvar = newtemp()
-		emit(["=",tempvar,p[1]])
-		p[0] = Node("int_float", [child1],place=tempvar)
+		# tempvar = newtemp()
+		# emit(["=",tempvar,p[1]])
+		p[0] = Node("int_float", [child1],place=p[1])
 		p[0].value = p[1]
 
 
@@ -584,11 +573,10 @@ def p_method_invocation(p): #type checking remaining
 				emit(['param', i ])
 		
 		global SCOPE
-		tempvar = check_validity(p[1].place,SCOPE)
+		tempvar = check_validity(p[1].place,SCOPE, 'function')
 		
 		emit(['call', tempvar])
-		tempscope = getscopebyname(p[1].place, SCOPE)
-		p[0].place = check_validity('return', tempscope)
+		p[0].place = 'return'
 
 def p_argument_list_opt(p):
 		'''argument_list_opt : argument_list'''
@@ -656,8 +644,10 @@ def p_variable_declaration_body_1(p): # eg. var x:Int = 2; or var x = 2 or var x
 		tempdict['name'] = p[1].place[i]
 		tempdict['type'] = p[5].type
 		tempdict['place'] = newtemp()
+		tempdict['scopetype'] = 'local'
 
 		if tempdict['type'] == 'newarray':
+			tempdict['type'] = 'array'
 			tempdict['size'] = int(p[5].place)
 			emit(["Array", tempdict['place'], 4*int(tempdict['size'])])
 		else:
@@ -739,12 +729,8 @@ def p_fun_variable_declarator_id(p):
 	child1 = create_leaf("IDENTIFIER", p[1])
 	child2 = create_leaf("COLON", p[2])
 	p[0] = Node("fun_variable_declarator_id", [child1, child2, p[3]])
-	attribute={}
-	attribute['name'] = p[1]
-	attribute['type'] = p[3].type
-	attribute['place'] = newtemp()
-	global SCOPE
-	SCOPE.addentry(attribute)
+	p[0].place = p[1]
+	p[0].type = p[3].type
 
 
 #DATA_TYPES AND VARIABLE_TYPES
@@ -981,7 +967,7 @@ def p_for_loop(p):
 	p[0] = Node("for_loop_st",[child1,child2,p[3],p[4],p[5],p[6]])
 	global nextquad
 	global SCOPE
-	tempvar = check_validity(p[1],SCOPE)
+	tempvar = check_validity(p[1],SCOPE, 'variable')
 	p[0].trueList.append(nextquad)
 	emit(['ifgoto', None , p[4].place, tempvar, p[6].place])
 	p[0].falseList.append(nextquad)
@@ -1093,8 +1079,10 @@ def p_return_statement(p):
 				dic['name'] = 'return'
 				dic['place'] = p[2].place
 				dic['type'] = 'Int'
+				dic['scopetype'] = 'local'
 				SCOPE.addentry(dic)
-				emit(['ret', p[2].place])
+				if p[2].place != None:
+					emit(['ret', p[2].place])
 
 
 
@@ -1105,25 +1093,30 @@ def p_method_declaration(p):
 
 
 def p_method_header(p):
-		'''method_header : method_header_name parker func_arg_start fun_params_opt RPAREN COLON method_return_type ASOP'''
-		child2 = create_leaf("RPAREN", p[5])
-		child3 = create_leaf("COLON", p[6])
-		child4 = create_leaf("ASSIGN", p[8])
+		'''method_header : method_header_name func_arg_start fun_params_opt RPAREN COLON method_return_type ASOP'''
+		child2 = create_leaf("RPAREN", p[4])
+		child3 = create_leaf("COLON", p[5])
+		child4 = create_leaf("ASSIGN", p[7])
 		global SCOPE
 		dic={}
 		dic['type'] = 'function'
 		dic['name']=p[1].value
-		dic['returntype']=p[7].type
-		dic['place'] = p[2].place
+		dic['returntype']=p[6].type
+		dic['place'] = p[1].place
 		dic['tid'] = SCOPE.getid()
 		getscope(SCOPE.pid).addentry(dic)
-		p[0] = Node("method_header", [p[1], p[2], p[3], p[4],child2, child3, p[7], child4])
 
-def p_parker(p):
-	'''parker : empty'''
-	funbegin = newlabel()
-	emit(['label ' + funbegin])
-	p[0] = Node("parker",[p[1]],place = funbegin)
+		if p[3].place != None:
+			for i in range(0,len(p[3].place)):
+				tempdict = {}
+				tempdict['name'] = p[3].place[i]
+				tempdict['type'] = p[3].type[i]
+				tempdict['scopetype'] = 'param'
+				tempdict['paramno'] = i + 1
+				tempdict['place'] = newtemp()
+				SCOPE.addentry(tempdict)
+
+		p[0] = Node("method_header", [p[1], p[2], p[3], child2, child3, p[6], child4])
 
 def p_func_arg_start(p):
 		'''func_arg_start : LPAREN'''
@@ -1139,22 +1132,27 @@ def p_fun_params_opt(p):
 	'''fun_params_opt : fun_params
 					| empty'''
 	p[0] = Node("fun_params_opt",[p[1]])
-	# p[0].place = p[1].place
+	p[0].place = p[1].place
+	p[0].type = p[1].type
 
 def p_fun_params(p):
 	'''fun_params : fun_variable_declarator_id 
 				  | fun_params COMMA fun_variable_declarator_id'''
 	if len(p)==2:
 		p[0] = Node("fun_params",[p[1]])
+		p[0].place = [p[1].place]
+		p[0].type = [p[1].type]
 	else:
 		child1 = create_leaf("COMMA",p[2])
 		p[0] = Node("fun_params",[p[1],child1,p[3]])
+		p[0].place = p[1].place + [p[3].place]
+		p[0].type = p[1].type + [p[3].type]
 
   
 def p_method_return_type(p):
 		'''method_return_type : type''' 
 		p[0] = Node("method_return_type", [p[1]])
-		p[0].type = p[1].value
+		p[0].type = p[1].type
 
 def p_method_return_type1(p):
 		'''method_return_type : TYPE_VOID'''
@@ -1165,7 +1163,14 @@ def p_method_header_name(p):
 		'''method_header_name : KEYWORD_DEF IDENTIFIER'''
 		child1 = create_leaf("DEF", p[1])
 		child2 = create_leaf("IDENTIFIER", p[2])
-		p[0] = Node("method_header_name", [child1, child2],value=p[2])
+
+		if p[2] == 'main':
+			funbegin = 'main'
+		else:
+			funbegin = newlabel()
+
+		emit(['label', funbegin])
+		p[0] = Node("method_header_name", [child1, child2],place=funbegin,value = p[2])
 
 
 def p_method_body(p):

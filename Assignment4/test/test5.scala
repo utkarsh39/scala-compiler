@@ -1,35 +1,25 @@
-class Point(val xc: Int, val yc: Int) {
-   var x: Int = xc;
-   var y: Int = yc;
-   def move(dx: Int, dy: Int):Unit = {
-      x = x + dx;
-      y = y + dy;
-      println ("Point x location : " + x);
-      println ("Point y location : " + y);
-   }
-}
+object HelloWorld
+{
+  var a:Int = 1;
+  var b:Int = 2;
+  var c:Int = 1;
 
-class Location(val xc: Int,val yc: Int,
-   val zc :Int) extends Point(xc:Int, yc:Int){
-   var z: Int = zc;
+  var d:Int = 0;
 
-   def move(dx: Int, dy: Int, dz: Int):Int = {
-      x = x + dx;
-      y = y + dy;
-      z = z + dz;
-      println ("Point x location : " + x);
-      println ("Point y location : " + y);
-      println ("Point z location : " + z);
-      return x;
-   }
-}
+  d= b * b - 4 * a * c;
 
-object Test {
-   def main(args: Array[String]):String = {
-      val loc:Location = new Location(10, 20, 15);
+  if(d < 0)
+  {
+    var x:Int = 0;
+  }
 
-      // Move to a new location
-      loc.move(10, 10, 5);
-      return "Hello"+"World";
-   }
+  else
+  {
+    var sq:Int = d/2;
+    var neg:Int = b;
+
+    var x1:Int = (neg + sq)/(2*a);
+    var x2:Int = (neg - sq)/(2*a);
+  }
+ 
 }

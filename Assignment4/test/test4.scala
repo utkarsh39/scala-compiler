@@ -1,29 +1,28 @@
-object Sum extends App 
-{
-  
-  println(sum(list));
-  println(sum2(list));
-  println(sum3(list));
-   
-  def sum(ints:Array[String]): Int =
-  { 
-    println(ints);
-  }
- 
-  def sum2(ints: Array[People]): Int = {
+object test{
+	def summation(n:Int) : Int = {
+	var i:Int = 0;
 
-    def sumAccumulator(ints: Array[Int], accum: Int): Int = 
-    {
-      sum(accum,ints);
-    }
-    sumAccumulator(ints, 0);
-  }
+	do{
+		i = i + n;
+		n -= 1;
+	} while(n > 0);
+	return i;
+	}
 
-  def sum3(xs: Array[Int]): Int = {
-    if (xs.isEmpty) 
-      p=1;
-    else 
-      p=xs.head + sum3(xs.tail);
-  }
-   
+	def modexp(x:Int, y:Int, p:Int) : Int = {
+		var res:Int = 1;
+		x = x % p;
+		while(y > 0)
+		{
+			if(y % 2 == 1)
+			{
+				res = (res * x) % p;
+			}
+
+			y >>= 1;
+			x = (x * x) % p;
+		}
+
+		return res;
+	}
 }
