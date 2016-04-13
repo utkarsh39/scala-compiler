@@ -33,6 +33,7 @@ def generate_block():
 				block[i+1] = 1
 			else:
 				if line[0] == 'ifgoto' or line[0] == 'goto':
+					block[i] = 1
 					block[i+1] = 1
 					#print line[1]
 					block[int(line[1])] = 1

@@ -1,0 +1,15 @@
+(dp1
+S't6'
+p2
+S'main'
+p3
+sS't2'
+p4
+g3
+sS't3'
+p5
+g3
+sS't1'
+p6
+g3
+s.

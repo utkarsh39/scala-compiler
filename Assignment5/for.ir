@@ -1,0 +1,12 @@
+1 label main
+2 = t1 0
+3 = t2 0
+4 ifgoto 8 <= t1 100
+5 goto 10
+6 + t1 t1 1
+7 goto 4
+8 + t2 t2 t1
+9 goto 6
+10 print t2
+11 print newline
+12 exit 0

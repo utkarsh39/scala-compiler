@@ -59,10 +59,14 @@ for i in range(1,len(dict_symboltable) + 1):
 			param = {}
 			local = {}
 			a = dict_symboltable[d[key]['tid']].table
+			# print a
 			paramsize = 0
 			localsize = 0
 			# print a
 			for key1 in a:
+				if key1 == 'return':
+					continue
+
 				if a[key1]['scopetype'] == 'param':
 					param[a[key1]['paramno']] = a[key1]['place']
 					variable_list[a[key1]['place']] = d[key]['place']

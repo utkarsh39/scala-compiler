@@ -125,6 +125,8 @@ for line in lines:
 
 variable_list = pickle.load(open(filename + '_var_list.p', 'rb'))
 
+# print variable_list
+
 for identifier in identifiers:
 	if identifier not in arrays:
 		if identifiers[identifier] == 1:
@@ -146,6 +148,8 @@ print "\t" + ".text"
 
 function_list = pickle.load(open(filename + '_func_list.p', 'rb'))
 
+# print function_list
+
 for i in function_list:
 	fun = function_list[i]
 	size = 0
@@ -160,7 +164,7 @@ for i in function_list:
 
 	for i in range(1,len(fun['param']) + 1):
 		main.memad[fun['param'][i]] = str(size) + '($fp)'
-		size += 4
+		size -= 4
 
 main.memad['return'] = '$v0'
 main.ad['return'] = ['$v0']
@@ -332,7 +336,7 @@ for line in lines:
  		print "\t" + "sw $fp, 4($sp)"
 		print "\t" + "sw $ra, 0($sp)"
 		print "\t" + "addi $fp, $sp, 0 "
-		print "\t" + "addi $sp," + str(function_list[x]['localsize'])
+		print "\t" + "addi $sp, $sp, " + str(-function_list[x]['localsize'])
 
 	elif op == 'ret':
 		if(len(line) > 2):                # value returning function
@@ -343,6 +347,7 @@ for line in lines:
 				MOVE('$v0',x)
 		print "\t" + "lw $ra, 0($fp)"
 		print "\t" + "lw $a0, 8($fp)"
+		print "\t" + "addi $a0, 12"
 		print "\t" + "add $sp, $fp, $a0"
 		print "\t" + "lw $fp, 4($fp)"
 		print "\t" + "jr $ra"
@@ -391,10 +396,12 @@ for line in lines:
 	elif ( op == 'exit'):
 		print "\t" + "li $v0, 10\n" + "\t" + "syscall"
 	
-	for x in line:
-		if x == 'return':
-			continue
-		getreg.update_dead(x,lno)
+	if op != 'ifgoto' and op != 'goto' and op != 'param' and op != 'call' and op != 'ret':
+		for x in line:
+			getreg.update_dead(x,lno)
+	else:
+		getreg.clear_rd()
+		getreg.clear_ad()
 print "\n"	
 
 # state -1 => new register is returned && x is in memory and not register

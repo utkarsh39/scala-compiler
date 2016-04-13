@@ -1,0 +1,13 @@
+(dp1
+S't10'
+p2
+S'main'
+p3
+sS't2'
+p4
+S'fun1'
+p5
+sS't1'
+p6
+g5
+s.
