@@ -14,15 +14,15 @@ def check_validity(var,scope,vartype):
 			raise Exception("Correct the Semantics :P")
 
 		return check_validity(var, getscope(scope.pid), vartype)
-def get_dict(var,scope,vartype):
+def get_dict(var,scope):
 	if var in scope.table:
 		return (scope.table[var])
 	else :
 		if scope.pid == 0:
-			print vartype ,var,' not declared.'
+			print var,' not declared.'
 			raise Exception("Correct the Semantics :P")
 
-		return check_validity(var, getscope(scope.pid), vartype)
+		return get_dict(var, getscope(scope.pid))
 
 class Env:
 	tablecount = 1
@@ -221,7 +221,8 @@ def p_assignment(p):
 		'''assignment : valid_variable assignment_operator assignment_expression'''
 		p[0] = Node("assignment", [p[1], p[2], p[3]])
 		if(p[1].type != p[3].type):
-			raise Exception("Type mismatch in assignment")
+			# print p[1].type, p[3].type,p.lexer.lineno
+			raise Exception("Type mismatch in assignment in line",p.lexer.lineno)
 		if p[2].place == '=':
 			emit(['=',p[1].place,p[3].place])
 		else:
@@ -242,19 +243,19 @@ def p_valid_variable1(p):
 def p_array_access(p):
 		'''array_access : name dimension'''
 		p[0] = Node("array_access", [p[1], p[2]])
-		d = get_dict(p[1].place, SCOPE, 'variable')
-		if d['type'] != "array":
-			raise Exception(p[1].place, "is not an array")
 		global SCOPE
+		d = get_dict(p[1].place, SCOPE)
+		if d['type'] != "array":
+			raise Exception(p[1].place, "is not an array in line",p.lexer.lineno)
 		tempvar = check_validity(p[1].place, SCOPE, 'variable')
 		p[0].place = tempvar + ' ' + p[2].place
-
+		p[0].type = 'Int'
 def p_dimension(p):
 	'''dimension : LBRAC expression RBRAC '''
 	child1 = create_leaf("LBRAC",p[1])
 	child2 = create_leaf("RBRAC",p[3])
 	if p[2].type != 'Int':
-		raise Exception("The access element must be an integer")
+		raise Exception("The access element must be an integer in line ",p.lexer.lineno)
 	p[0] = Node("dimension",[child1,p[2],child2])
 	p[0].place = '[ ' + p[2].place + ' ]'
 
@@ -302,7 +303,7 @@ def p_conditional_or_expression(p):
 			child1 = create_leaf("OR", p[2])
 			p[0] = Node("conditional_or_expression", [p[1], child1, p[3],p[4]])
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in OR expression")
+				raise Exception("Type mismatch in OR expression in line ",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 			backpatch(p[1].falseList, p[3].quad)
@@ -325,8 +326,9 @@ def p_conditional_and_expression(p):
 		else:
 			child1 = create_leaf("AND", p[2])
 			p[0] = Node("conditional_and_expression", [p[1], child1, p[3], p[4]])
-			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in AND expression")
+			if p[1].type != p[4].type:
+				# print p[1].type, p[3].type
+				raise Exception("Type mismatch in AND expression in line",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 			backpatch(p[1].trueList, p[3].quad)
@@ -348,7 +350,7 @@ def p_inclusive_or_expression(p):
 			emit([ p[2],tempvar, p[1].place, p[3].place])
 			p[0] = Node("inclusive_or_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in Bitwise OR expression")
+				raise Exception("Type mismatch in Bitwise OR expression in line",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 def p_exclusive_or_expression(p):
@@ -366,7 +368,7 @@ def p_exclusive_or_expression(p):
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("exclusive_or_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in XOR expression")
+				raise Exception("Type mismatch in XOR expression in line", p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 def p_and_expression(p):
@@ -384,7 +386,7 @@ def p_and_expression(p):
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("and_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in Bitwise AND expression")
+				raise Exception("Type mismatch in Bitwise AND expression in line",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 def p_equality_expression(p):
@@ -402,7 +404,7 @@ def p_equality_expression(p):
 			global nextquad
 			p[0] = Node("relational_expression", [p[1], child1, p[3]])
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in equality expression")
+				raise Exception("Type mismatch in equality expression in line ", p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 			p[0].trueList.append(nextquad)
@@ -426,8 +428,9 @@ def p_relational_expression(p):
 			child1 = create_leaf("RelationalOp", p[2])
 			global nextquad
 			p[0] = Node("relational_expression", [p[1], child1, p[3]])
+			# print "relational",p[1].type, p[3].type
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in relational expression")
+				raise Exception("Type mismatch in relational expression in line",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 			p[0].trueList.append(nextquad)
@@ -452,7 +455,7 @@ def p_shift_expression(p):
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("shift_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in shift expression")
+				raise Exception("Type mismatch in shift expression in line",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 
@@ -472,7 +475,7 @@ def p_additive_expression(p):
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("additive_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in Additive expression")
+				raise Exception("Type mismatch in Additive expression in line",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 def p_multiplicative_expression(p):
@@ -492,7 +495,7 @@ def p_multiplicative_expression(p):
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("multiplicative_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
-				raise Exception("Type mismatch in Multiplicative expression")
+				raise Exception("Type mismatch in Multiplicative expression in line",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
 def p_unary_expression(p):
@@ -537,8 +540,8 @@ def p_unary_expression_not_plus_minus1(p):
 	p[0] = Node("unary_expression_not_plus_minus", [child1, p[2]])
 	p[0].trueList=p[2].falseList
 	p[0].falseList=p[2].trueList
-	if p[2].type != "Bool":
-		raise Exception("NOT can only be used with boolean type. Invalid use with ", p[2].type)
+	if p[2].type != "Boolean":
+		raise Exception("NOT can only be used with boolean type. Invalid use with ", p[2].type,"in line ",p.lexer.lineno)
 	else:
 		p[0].type = p[2].type
 
@@ -610,7 +613,7 @@ def p_c_literal_binary_true(p):
 		global nextquad
 		p[0].trueList.append(nextquad)
 		emit(["goto",None])
-		p[0].type = "Bool"
+		p[0].type = "Boolean"
 
 def p_c_literal_binary_false(p):
 		'''c_literal : BOOL_CONSTF'''
@@ -619,7 +622,7 @@ def p_c_literal_binary_false(p):
 		global nextquad
 		p[0].falseList.append(nextquad)
 		emit(["goto",None])
-		p[0].type = "Bool"
+		p[0].type = "Boolean"
 
 def p_int_float(p):
 		'''int_float : INT_NUMBER '''
@@ -636,13 +639,24 @@ def p_method_invocation(p): #type checking remaining
 		p[0] = Node("method_invocation", [p[1], child1, p[3], child2])
 		global SCOPE
 		tempvar = check_validity(p[1].place,SCOPE, 'function')
+		d= get_dict(p[1].place, SCOPE)
+		tid = d['tid']
+		paramtype=d['paramtype']
+		# print "Method invocation",paramtype, p[3].type
+		for i in range(0,len(p[3].type)):
+			if p[3].type[i] != paramtype[i]:
+				# print "Function parameter type",p[3].type[i], paramtype[i]
+				raise Exception("Type of parameters mismatch in line",p.lexer.lineno)
 
-		if p[1].type !='function':
-			raise Exception(tempvar, " is not a function")
-		d= get_dict(p[1].place)
+		if d['type'] !='function':
+			raise Exception(tempvar, " is not a function in line",p.lexer.lineno)
 		p[0].type = d['returntype']
-		if d['lenarg'] != len(p[3].place):
-			raise Exception(" Insufficient arguments for",p[1].place)
+		if p[3].place is not None:
+			if d['lenarg'] != len(p[3].place):
+				raise Exception(" Insufficient arguments for",p[1].place,"in line ",p.lexer.lineno)
+		else:
+			if d['lenarg'] != 0:
+				raise Exception(" Function ",p[1].place,"cannot take arguments in line",p.lexer.lineno)
 		if p[3].place is not None:
 			for i in p[3].place:
 				emit(['param', i ])
@@ -655,22 +669,23 @@ def p_argument_list_opt(p):
 		'''argument_list_opt : argument_list'''
 		p[0] = Node("argument_list_opt", [p[1]])
 		p[0].place = p[1].place
-
+		p[0].type = p[1].type
 def p_argument_list_opt2(p):
 		'''argument_list_opt : empty'''
 		p[0] = Node("argument_list_opt", [p[1]])
-
+		p[0].type = ["Unit"]
 def p_argument_list(p):
 		'''argument_list : expression
 						| argument_list COMMA expression'''
 		if len(p) == 2:
 			p[0] = Node("argument_list", [p[1]])
 			p[0].place = [p[1].place]
+			p[0].type = [p[1].type]
 		else:
 			child1 = create_leaf("COMMA", p[2])
 			p[0] = Node("argument_list", [p[1], child1, p[3]])
 			p[0].place = p[1].place + [p[3].place]
-
+			p[0].type = p[1].type + [p[3].type]
 # LOCAL VARIABLE DECLARATION
 
 def p_declaration_keyword(p):
@@ -857,22 +872,27 @@ def p_name(p):
 		p[0] = Node("name", [p[1]])
 		p[0].value = p[1].value
 		p[0].place = p[1].place
-
+		p[0].type = p[1].type
 
 def p_simple_name(p):
 		'''simple_name : IDENTIFIER'''
 		child1 = create_leaf("IDENTIFIER", p[1])
 		p[0] = Node("simple_name", [child1])
+		global SCOPE
 		p[0].value = p[1]
 		p[0].place = p[1]
-
+		d = get_dict(p[1], SCOPE)
+		# print d
+		p[0].type = d['type']
 def p_qualified_name(p):
 		'''qualified_name : name INST simple_name'''
 		child1 = create_leaf("DOT", p[2])
 		p[0] = Node("qualified_name", [p[1], child1, p[3]])
+		global SCOPE
 		p[0].value = p[1].value + '.' + p[3].value
 		p[0].place = p[1].place + '.' + p[3].place
-
+		d = get_dict(p[3], SCOPE)
+		p[0].type = d['type']
 
 #INITIALIZERS
 def p_array_initializer(p):
@@ -1177,16 +1197,9 @@ def p_method_header(p):
 		child3 = create_leaf("COLON", p[5])
 		child4 = create_leaf("ASSIGN", p[7])
 		global SCOPE
-		dic={}
-		dic['type'] = 'function'
-		dic['name']=p[1].value
-		dic['returntype']=p[6].type
-		dic['place'] = p[1].place
-		dic['tid'] = SCOPE.getid()
-		dic['lenarg'] = len(p[3].place)
-		getscope(SCOPE.pid).addentry(dic)
 
 		if p[3].place != None:
+			paramtype = list(p[3].type)
 			for i in range(0,len(p[3].place)):
 				tempdict = {}
 				tempdict['name'] = p[3].place[i]
@@ -1195,6 +1208,20 @@ def p_method_header(p):
 				tempdict['paramno'] = i + 1
 				tempdict['place'] = newtemp()
 				SCOPE.addentry(tempdict)
+		else:
+			paramtype = ["Unit"]
+		dic={}
+		dic['type'] = 'function'
+		dic['name']=p[1].value
+		dic['returntype']=p[6].type
+		dic['paramtype'] = paramtype
+		dic['place'] = p[1].place
+		dic['tid'] = SCOPE.getid()
+		if p[3].place == None:
+			dic['lenarg'] = 0
+		else:
+			dic['lenarg'] = len(p[3].place)
+		getscope(SCOPE.pid).addentry(dic)
 
 		p[0] = Node("method_header", [p[1], p[2], p[3], child2, child3, p[6], child4])
 
@@ -1267,7 +1294,7 @@ def p_method_start_scope(p):
 
 
 # CLASS DECLARATION
-def p_class_declaration(pmethod_header_namemethod_header_name
+def p_class_declaration(p):
 	'''class_declaration : class_header class_body'''
 	p[0] = Node("class_declaration", [p[1], p[2]])
 
