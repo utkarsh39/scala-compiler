@@ -4,6 +4,7 @@ import os
 import sys
 from backpatch import *
 import ply.yacc as yacc
+import cPickle as pickle
 
 tokens = LEXER.tokens
 START = ['ProgramStructure']
@@ -47,10 +48,6 @@ for i in range(1,len(TAC)):
 		print TAC[i][j],
 	print
 
-
-print '\n'
-print '\n'
-
 function_list = {} 				# gives info about parameters and local variables of function with name as per 3AC
 variable_list = {}
 
@@ -90,9 +87,9 @@ for i in range(1,len(dict_symboltable) + 1):
 
 			function_list[d[key]['place']] = tempdict
 
+filename = sys.argv[1]
 
-for key in function_list:
-	print key, function_list[key]
+filename = filename[:-6]
 
-for key in variable_list:
-	print key, variable_list[key]
+pickle.dump(function_list, open(filename + '_func_list.p', 'wb'))
+pickle.dump(variable_list, open(filename + '_var_list.p', 'wb'))

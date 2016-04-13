@@ -25,10 +25,11 @@ def generate_block():
 		line = main.lines[i]
 		line.remove(line[0])
 
-		if line[0] == 'label' or line[0] = 'push':
+		if line[0] == 'label' or line[0] == 'param':
 			block[i] = 1
 		else:
 			if line[0] == 'call' or line[0] == 'ret':
+				block[i] = 1
 				block[i+1] = 1
 			else:
 				if line[0] == 'ifgoto' or line[0] == 'goto':

@@ -1,0 +1,16 @@
+(dp1
+S't1'
+p2
+S'fun1'
+p3
+sS't2'
+p4
+g3
+sS't3'
+p5
+g3
+sS't9'
+p6
+S'main'
+p7
+s.
