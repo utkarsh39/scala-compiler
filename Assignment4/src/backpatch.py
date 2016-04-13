@@ -5,6 +5,14 @@ def getscope(id):
 		global dict_symboltable
 		return dict_symboltable[id]
 
+def addtemp(scope, temp):
+	if scope.objecttype == 'function' or scope.objecttype == 'global':
+		scope.templist.append(temp)
+	else:
+		if scope.pid == 0:
+			raise Exception("No valid table found")
+		addtemp(getscope(scope.pid), temp)
+
 def check_validity(var,scope,vartype):
 	if var in scope.table:
 		return (scope.table[var])['place']
@@ -26,7 +34,7 @@ def get_dict(var,scope):
 
 class Env:
 	tablecount = 1
-	def __init__(self, prev_env = None):
+	def __init__(self, prev_env = None, name = None,templist = [], objecttype = None):
 		self.table = {}
 		self.id = Env.tablecount
 		dict_symboltable[Env.tablecount] = self
@@ -35,7 +43,9 @@ class Env:
 			self.pid = 0
 		else:
 			self.pid = prev_env.id
-
+		self.name = name
+		self.objecttype = objecttype
+		self.templist = templist
 	def addentry(self, dic):
 		if dic['name'] in self.table:
 			print 'Error: Entry already present - ( ' + name + ' )'
@@ -54,7 +64,7 @@ class Env:
 
 TAC = []
 TAC.append([])
-SCOPE = Env()
+SCOPE = Env(objecttype = "global")
 PSCOPE = SCOPE
 CSCOPE = SCOPE
 nextquad = 1
@@ -302,7 +312,7 @@ def p_conditional_or_expression(p):
 		else:
 			child1 = create_leaf("OR", p[2])
 			p[0] = Node("conditional_or_expression", [p[1], child1, p[3],p[4]])
-			if p[1].type != p[3].type:
+			if p[1].type != p[4].type:
 				raise Exception("Type mismatch in OR expression in line ",p.lexer.lineno)
 			else:
 				p[0].type = p[1].type
@@ -345,8 +355,11 @@ def p_inclusive_or_expression(p):
 			p[0].value = p[1].value
 			p[0].type = p[1].type
 		else:
+
 			child1 = create_leaf("OR_BITWISE", p[2])
 			tempvar = newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([ p[2],tempvar, p[1].place, p[3].place])
 			p[0] = Node("inclusive_or_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -365,6 +378,8 @@ def p_exclusive_or_expression(p):
 		else:
 			child1 = create_leaf("XOR", p[2])
 			tempvar = newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("exclusive_or_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -383,6 +398,8 @@ def p_and_expression(p):
 		else:
 			child1 = create_leaf("AND_BITWISE", p[2])
 			tempvar=newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("and_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -452,6 +469,8 @@ def p_shift_expression(p):
 		else:
 			child1 = create_leaf("ShiftOp", p[2])
 			tempvar = newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("shift_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -472,6 +491,8 @@ def p_additive_expression(p):
 		else:
 			child1 = create_leaf("AddOp", p[2])
 			tempvar=newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("additive_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -492,6 +513,8 @@ def p_multiplicative_expression(p):
 		else:
 			child1 = create_leaf("MultOp", p[2])
 			tempvar=newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("multiplicative_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -505,6 +528,8 @@ def p_unary_expression(p):
 		if len(p) == 3:
 			child1 = create_leaf("UnaryOp",p[1])
 			tempvar = newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[1],tempvar,"0",p[2]])
 			p[0].type = p[2].type
 			p[0] = Node("unary_expression", [child1, p[2]],place=tempvar)
@@ -528,6 +553,8 @@ def p_unary_expression_not_plus_minus(p):
 		else:
 			child1 = create_leaf("Unary_1Op", p[1])
 			tempvar=newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit(["=",p[1],tempvar,p[2]])
 			p[0] = Node("unary_expression_not_plus_minus", [child1, p[2]],place=tempvar)
 			p[0].trueList=p[2].trueList
@@ -1213,6 +1240,7 @@ def p_method_header(p):
 		dic={}
 		dic['type'] = 'function'
 		dic['name']=p[1].value
+		SCOPE.name = p[1].place
 		dic['returntype']=p[6].type
 		dic['paramtype'] = paramtype
 		dic['place'] = p[1].place
@@ -1230,7 +1258,7 @@ def p_func_arg_start(p):
 		global SCOPE
 		global CSCOPE
 
-		CSCOPE = Env(SCOPE)
+		CSCOPE = Env(SCOPE,objecttype = 'function')
 		SCOPE = CSCOPE
 		child1 = create_leaf("LPAREN", p[1])
 		p[0] = Node("func_args_start", [child1])
