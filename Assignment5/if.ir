@@ -11,22 +11,24 @@
 11 ifgoto 13 == t2 0
 12 goto 15
 13 = t3 t1
-14 goto 24
+14 goto 26
 15 % t7 t1 t2
 16 = t3 t7
 17 ifgoto 19 != t3 0
-18 goto 24
+18 goto 25
 19 % t8 t1 t2
 20 param t2
 21 param t8
 22 call fun1
 23 = t3 return
-24 ret t3
-25 label main
-26 param 4
-27 param 10
-28 call fun1
-29 = t9 return
-30 print t9
-31 print newline
-32 exit 0
+24 goto 26
+25 = t3 t2
+26 ret t3
+27 label main
+28 param 5336
+29 param 76
+30 call fun1
+31 = t9 return
+32 print t9
+33 print newline
+34 exit 0

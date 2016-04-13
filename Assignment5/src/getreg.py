@@ -33,6 +33,19 @@ def clearmem(var):
 	if var in main.mem:
 		main.mem.remove(var)
 
+def clear_rd():
+	for reg in main.rd:
+		main.rd[reg] = []
+
+def clear_ad():
+	for var in main.ad:
+		if var == 'return':
+			continue
+			
+		if var not in main.mem:
+			main.mem.append(var)
+		main.ad[var] = []
+
 def check_reg(var,line):
 	if len(main.ad[var]) == 0:
 		return find_reg(line), -1
@@ -109,7 +122,7 @@ def get_reg(x,y,z,line):
 def update_dead(var,line):
 	#print "var =" + var
 	#print "line =" + str(line)
-	if var not in main.live[line] and (var in main.ad) and len(main.ad[var]) >0:
+	if var != 'return' and var not in main.live[line] and (var in main.ad) and len(main.ad[var]) >0:
 		if var not in main.mem:
 			print "\t" + "sw " + main.ad[var][0] + ", " + main.memad[var]
 			main.mem.append(var)

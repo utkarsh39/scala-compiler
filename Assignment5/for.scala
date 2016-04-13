@@ -1,19 +1,10 @@
 object main {
-	var i:Int = 6;
-	var j:Int = 0;
+	def main():Unit = {
+		var i:Int = 0;
+		var sum:Int = 0;
 
-	def print():Unit = {
-		return 0;
-	}
-
-	while(i<= 8 && i>= 6 && i!= 7){
-		if(i >= 6){
-			print("yes\n");
+		for(i <- 0 to 100){
+			sum += i;
 		}
-		else{
-			print("no\n");
-		}
-
-		i += 1;
 	}
 }

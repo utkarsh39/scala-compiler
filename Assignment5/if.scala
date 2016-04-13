@@ -17,6 +17,9 @@ object program {
 			if(g != 0){
 				g = gcd(b,a%b);
 			}
+			else{
+				g = b;
+			}
 		}
 
 		return g;
