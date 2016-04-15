@@ -1,11 +1,11 @@
 object program {
-	def gcd(a:Int, b:Int):Int = {
+	def gcd(a:Int,b:Int):Int = {
 		var g:Int = 0;
 
-		if (a < b){
+		if(a < b){
 			a = a + b;
 			b = a - b;
-			a = a - b; 
+			a = a - b;
 		}
 
 		if(b == 0){
@@ -15,7 +15,7 @@ object program {
 			g = a % b;
 
 			if(g != 0){
-				g = gcd(b,a%b);
+				g = gcd(b,g);
 			}
 			else{
 				g = b;
@@ -25,7 +25,14 @@ object program {
 		return g;
 	}
 
-	def main():Unit = {
-		var g:Int = gcd(4,10);
+	def main():Int = {
+		var n,m,g:Int = 0;
+
+		scan n;
+		scan m;
+
+		g = gcd(n,m);
+
+		println g;
 	}
 }

@@ -5,6 +5,9 @@ def getscope(id):
 		global dict_symboltable
 		return dict_symboltable[id]
 
+def addtemp(scope, temp):
+	scope.templist.append(temp)
+
 def check_validity(var,scope,vartype):
 	if var in scope.table:
 		return (scope.table[var])['place']
@@ -14,7 +17,6 @@ def check_validity(var,scope,vartype):
 			raise Exception("Correct the Semantics :P")
 
 		return check_validity(var, getscope(scope.pid), vartype)
-		
 def get_dict(var,scope):
 	if var in scope.table:
 		return (scope.table[var])
@@ -27,7 +29,7 @@ def get_dict(var,scope):
 
 class Env:
 	tablecount = 1
-	def __init__(self, prev_env = None):
+	def __init__(self, prev_env = None, name = None,templist = [], objecttype = None):
 		self.table = {}
 		self.id = Env.tablecount
 		dict_symboltable[Env.tablecount] = self
@@ -36,6 +38,9 @@ class Env:
 			self.pid = 0
 		else:
 			self.pid = prev_env.id
+		self.name = name
+		self.objecttype = objecttype
+		self.templist = list(templist)
 
 	def addentry(self, dic):
 		if dic['name'] in self.table:
@@ -55,7 +60,7 @@ class Env:
 
 TAC = []
 TAC.append([])
-SCOPE = Env()
+SCOPE = Env(objecttype = "global", name = 'global')
 PSCOPE = SCOPE
 CSCOPE = SCOPE
 nextquad = 1
@@ -111,8 +116,7 @@ def p_program_structure(p):
 		p[0] = Node("ProgramStructure", [p[1]])
 
 def p_class_and_objects(p):
-	'''class_and_objects : SingletonObject
-						 | class_declaration'''
+	'''class_and_objects : SingletonObject'''
 	p[0] = Node("class_and_objects", [p[1]])
 
 def p_SingletonObject(p):
@@ -154,7 +158,6 @@ def p_end_scope(p):
 	p[0] = Node("start_scope", [child1])
 
 	global SCOPE
-	global CSCOPE
 
 	SCOPE = getscope(SCOPE.pid)
 
@@ -178,7 +181,6 @@ def p_block_statements(p):
 def p_block_statement(p):
 	'''block_statement : local_variable_declaration_statement
 						 | statement
-						 | class_declaration
 						 | SingletonObject
 						 | method_declaration'''
 	p[0] = Node("block_statement", [p[1]])
@@ -202,8 +204,7 @@ def p_expression_optional(p):
 	p[0].type = p[1].type
 def p_assignment_expression(p):
 		'''assignment_expression : assignment
-								 | conditional_or_expression
-								 | method_invocation'''
+								 | conditional_or_expression'''
 		p[0] = Node("assignment_expression", [p[1]], place = p[1].place)
 		p[0].value = p[1].value
 		p[0].trueList = p[1].trueList
@@ -224,10 +225,14 @@ def p_assignment(p):
 		if(p[1].type != p[3].type):
 			# print p[1].type, p[3].type,p.lexer.lineno
 			raise Exception("Type mismatch in assignment in line",p.lexer.lineno)
+
 		if p[2].place == '=':
 			emit(['=',p[1].place,p[3].place])
 		else:
 			emit([p[2].place[:-1],p[1].place,p[1].place,p[3].place])
+
+		if '[' in p[1].name:
+			emit(['=',p[1].name,p[1].place])
 
 def p_valid_variable(p):
 		'''valid_variable : name'''
@@ -241,6 +246,19 @@ def p_valid_variable1(p):
 		'''valid_variable : array_access'''
 		p[0] = Node("valid_variable", [p[1]],place = p[1].place)
 		p[0].type = p[1].type
+		p[0].name = p[1].name
+
+def p_valid_variables(p):
+	'''valid_variables : valid_variables COMMA valid_variable
+						| valid_variable'''
+	if len(p) == 2:
+		p[0] = Node("valid_variables",[p[1]])
+		p[0].place = [p[1].place]
+	else:
+		child1 = create_leaf("COMMA",p[2])
+		p[0] = Node("valid_variables",[p[1],child1,p[3]])
+		p[0].place = p[1].place + [p[3].place]
+
 def p_array_access(p):
 		'''array_access : name dimension'''
 		p[0] = Node("array_access", [p[1], p[2]])
@@ -249,8 +267,13 @@ def p_array_access(p):
 		if d['type'] != "array":
 			raise Exception(p[1].place, "is not an array in line",p.lexer.lineno)
 		tempvar = check_validity(p[1].place, SCOPE, 'variable')
-		p[0].place = tempvar + ' ' + p[2].place
+		newvar = newtemp()
+		addtemp(SCOPE,newvar)
+		p[0].place = newvar
+		p[0].name = tempvar + ' ' + p[2].place
 		p[0].type = 'Int'
+		emit(['=',p[0].place,p[0].name])
+
 def p_dimension(p):
 	'''dimension : LBRAC expression RBRAC '''
 	child1 = create_leaf("LBRAC",p[1])
@@ -346,8 +369,11 @@ def p_inclusive_or_expression(p):
 			p[0].value = p[1].value
 			p[0].type = p[1].type
 		else:
+
 			child1 = create_leaf("OR_BITWISE", p[2])
 			tempvar = newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([ p[2],tempvar, p[1].place, p[3].place])
 			p[0] = Node("inclusive_or_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -366,6 +392,8 @@ def p_exclusive_or_expression(p):
 		else:
 			child1 = create_leaf("XOR", p[2])
 			tempvar = newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("exclusive_or_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -384,6 +412,8 @@ def p_and_expression(p):
 		else:
 			child1 = create_leaf("AND_BITWISE", p[2])
 			tempvar=newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("and_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -453,6 +483,8 @@ def p_shift_expression(p):
 		else:
 			child1 = create_leaf("ShiftOp", p[2])
 			tempvar = newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("shift_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -473,6 +505,8 @@ def p_additive_expression(p):
 		else:
 			child1 = create_leaf("AddOp", p[2])
 			tempvar=newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("additive_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -493,6 +527,8 @@ def p_multiplicative_expression(p):
 		else:
 			child1 = create_leaf("MultOp", p[2])
 			tempvar=newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[2],tempvar,p[1].place,p[3].place])
 			p[0] = Node("multiplicative_expression", [p[1], child1, p[3]],place=tempvar)
 			if p[1].type != p[3].type:
@@ -506,6 +542,8 @@ def p_unary_expression(p):
 		if len(p) == 3:
 			child1 = create_leaf("UnaryOp",p[1])
 			tempvar = newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit([p[1],tempvar,"0",p[2]])
 			p[0].type = p[2].type
 			p[0] = Node("unary_expression", [child1, p[2]],place=tempvar)
@@ -529,6 +567,8 @@ def p_unary_expression_not_plus_minus(p):
 		else:
 			child1 = create_leaf("Unary_1Op", p[1])
 			tempvar=newtemp()
+			global SCOPE
+			addtemp(SCOPE, tempvar)
 			emit(["=",p[1],tempvar,p[2]])
 			p[0] = Node("unary_expression_not_plus_minus", [child1, p[2]],place=tempvar)
 			p[0].trueList=p[2].trueList
@@ -665,6 +705,7 @@ def p_method_invocation(p): #type checking remaining
 
 		emit(['call', tempvar])
 		p[0].place = newtemp()
+		addtemp(SCOPE,p[0].place)
 		emit(['=', p[0].place, 'return'])
 
 def p_argument_list_opt(p):
@@ -709,8 +750,7 @@ def p_local_variable_declaration(p):
 			p[0].type = p[2].type
 def p_variable_declaration_initializer(p):
 	'''variable_declaration_initializer : expression
-										| array_initializer
-										| class_initializer'''
+										| array_initializer'''
 	p[0] = Node("variable_declaration_initializer", [p[1]], place=p[1].place)
 	p[0].type = p[1].type
 	p[0].place = p[1].place
@@ -836,26 +876,16 @@ def p_type(p):
 	p[0].type = p[1].type
 
 def p_primitive_type(p):
-	'''primitive_type : TYPE_INT
-						| TYPE_DOUBLE
-						| TYPE_CHAR
-						| TYPE_STRING
-						| TYPE_BOOLEAN
-						| TYPE_VOID   '''
+	'''primitive_type : TYPE_INT'''
 	child1 = create_leaf("TYPE", p[1])
 	p[0] = Node("primitive_type", [child1])
 	p[0].type = p[1]
 
 def p_reference_type(p):
-	'''reference_type : class_data_type
-					  | array_data_type'''
+	'''reference_type : array_data_type'''
 	p[0] = Node("reference_type", [p[1]])
 	p[0].type = p[1].type
 
-def p_class_data_type(p):
-	'''class_data_type : name'''
-	p[0] = Node("class_data_type", [p[1]])
-	p[0].type = 'class'
 
 def p_array_data_type(p):
 	'''array_data_type : KEYWORD_ARRAY LBRAC TYPE_INT RBRAC'''
@@ -928,15 +958,15 @@ def p_array_initializer(p):
 		child3 = create_leaf("RPAREN", p[4])
 		p[0] = Node("array_initializer", [child1, child2, p[3], child3])
 
-def p_class_initializer(p):
-	''' class_initializer : KEYWORD_NEW name LPAREN argument_list_opt RPAREN '''
-	child1 = create_leaf("NEW", p[1])
-	child2 = create_leaf("LPAREN", p[3])
-	child3 = create_leaf("RPAREN", p[5])
-	p[0] = Node("class_initializer", [child1, p[2], child2, p[4], child3])
-	p[0].place = p[4].place
-	p[0].type = 'class'
-	p[0].value = p[2].value
+# def p_class_initializer(p):
+# 	''' class_initializer : KEYWORD_NEW name LPAREN argument_list_opt RPAREN '''
+# 	child1 = create_leaf("NEW", p[1])
+# 	child2 = create_leaf("LPAREN", p[3])
+# 	child3 = create_leaf("RPAREN", p[5])
+# 	p[0] = Node("class_initializer", [child1, p[2], child2, p[4], child3])
+# 	p[0].place = p[4].place
+# 	p[0].type = 'class'
+# 	p[0].value = p[2].value
 
 # STATEMENTS
 def p_statement(p):
@@ -954,7 +984,10 @@ def p_normal_statement(p):
 						| expression_statement marker
 						| empty_statement marker
 						| return_statement marker
-						| switch_statement marker '''
+						| switch_statement marker 
+						| print_int marker
+						| print_string marker
+						| scan_int marker'''
 
 	p[0] = Node("normal_statement", [p[1],p[2]])
 	backpatch(p[1].nextList, p[2].quad)
@@ -1040,41 +1073,48 @@ def p_do_while_statement(p):
 
 # FOR_LOOP
 def p_for_statement(p):
-	'''for_statement : KEYWORD_FOR LPAREN for_update RPAREN marker block'''
+	'''for_statement : KEYWORD_FOR LPAREN for_update marker RPAREN block'''
 	child1 = create_leaf ("FOR",p[1])
 	child2 = create_leaf ("LPAREN",p[2])
 	child3 = create_leaf ("RPAREN",p[4])
 	p[0] = Node("for_statement",[child1,child2,p[3],child3,p[5],p[6]])
-	backpatch(p[3].trueList, p[5].quad)
+	backpatch(p[3].trueList, p[4].quad)
 	backpatch(p[6].nextList, p[3].quad)
 	emit(['goto', p[3].quad])
 	p[0].nextList = p[3].falseList
 
 def p_for_update(p):
-	''' for_update : for_loop marker for_step_opts '''
-	p[0]=Node("for_update",[p[1],p[2],p[3]])
-	p[0].quad = p[2].quad
-	emit(['+', p[1].place , p[1].place, p[3].place])
-	emit(['goto', p[1].quad])
-	p[0].quad = p[2].quad
-	p[0].trueList = p[1].trueList
-	p[0].falseList = p[1].falseList
+	''' for_update : for_loop marker for_part marker for_step_opts'''
+	p[0]=Node("for_update",[p[1],p[2],p[3], p[4], p[5]])
+	emit(['+', p[1].place , p[1].place, p[5].place])
+	emit(['goto', p[2].quad])
+	backpatch(p[3].nextList, nextquad)
+	p[0].trueList.append(nextquad)
+	emit(['ifgoto', 'None', p[3].place, p[1].place, p[3].name])
+	p[0].falseList.append(nextquad)
+	emit(['goto', 'None'])
+	p[0].quad = p[4].quad
 
 def p_for_loop(p):
-	''' for_loop : IDENTIFIER CHOOSE expression for_untilTo marker expression '''
+	''' for_loop : IDENTIFIER CHOOSE expression'''
 
 	child1 = create_leaf("IDENTIFIER",p[1])
 	child2 = create_leaf("CHOOSE",p[2])
-	p[0] = Node("for_loop_st",[child1,child2,p[3],p[4],p[5],p[6]])
+	p[0] = Node("for_loop_st",[child1,child2,p[3]])
 	global nextquad
 	global SCOPE
 	tempvar = check_validity(p[1],SCOPE, 'variable')
-	p[0].trueList.append(nextquad)
-	emit(['ifgoto', None , p[4].place, tempvar, p[6].place])
-	p[0].falseList.append(nextquad)
-	emit(['goto', None])
-	p[0].quad = p[5].quad
+	emit(['=', tempvar, p[3].place])
 	p[0].place = tempvar
+
+def p_for_part(p):
+	'''for_part : for_untilTo expression '''
+	p[0] = Node("for_part",[p[1],p[2]])
+	p[0].place = p[1].place
+	p[0].name = p[2].place
+	global nextquad
+	p[0].nextList.append(nextquad)
+	emit(['goto', 'None'])
 
 def p_for_untilTo1(p):
 	'''for_untilTo : KEYWORD_UNTIL '''
@@ -1186,6 +1226,60 @@ def p_return_statement(p):
 					emit(['ret', p[2].place])
 
 
+def p_scan_int(p):
+	'''scan_int : KEYWORD_SCAN IDENTIFIER'''
+	child1 = create_leaf("KEYWORD_SCAN",p[1])
+	child2 = create_leaf("IDENTIFIER",p[2])
+	p[0] = Node("scan_statement", [child1,child2])
+	tempvar = check_validity(p[2],SCOPE, 'variable')
+	emit(['scan',tempvar])
+
+def p_print_int(p):
+	'''print_int : KEYWORD_PRINT valid_variables'''
+	child1 = create_leaf("KEYWORD_PRINT",p[1])
+	p[0] = Node("print_statement", [child1,p[2]])
+	for i in range(len(p[2].place)):
+		# if '[' in (p[2].place)[i]:
+		# 	tempvar = newtemp();
+		# 	emit(['=',tempvar, (p[2].place)[i]])
+		# else:
+		tempvar = (p[2].place)[i]
+		
+		emit(['print',tempvar])
+
+def p_println_int(p):
+	'''print_int : KEYWORD_PRINTLN valid_variables'''
+	child1 = create_leaf("KEYWORD_PRINTLN",p[1])
+	p[0] = Node("print_statement", [child1,p[2]])
+	for i in range(len(p[2].place)):
+		# if '[' in (p[2].place)[i]:
+		# 	tempvar = newtemp();
+		# 	emit(['=',tempvar, (p[2].place)[i]])
+		# else:
+		tempvar = (p[2].place)[i]
+		
+		emit(['print',tempvar])
+	emit(['print newline'])
+
+def p_print_string(p):
+	'''print_string : KEYWORD_PRINT STRING'''
+	child1 = create_leaf("KEYWORD_PRINT",p[1])
+	child2 = create_leaf("STRING",p[2])
+	p[0] = Node("print_statement", [child1,child2])
+	tempvar = newtemp()
+	emit(['=s',tempvar,'"',p[2],'"'])
+	emit(['print',tempvar])
+
+
+def p_println_string(p):
+	'''print_string : KEYWORD_PRINTLN STRING'''
+	child1 = create_leaf("KEYWORD_PRINTLN",p[1])
+	child2 = create_leaf("STRING",p[2])
+	p[0] = Node("print_statement", [child1,child2])
+	tempvar = newtemp()
+	emit(['=s',tempvar,'"',p[2],'"'])
+	emit(['print',tempvar])
+	emit(['print newline'])
 
 
 def p_method_declaration(p):
@@ -1215,6 +1309,7 @@ def p_method_header(p):
 		dic={}
 		dic['type'] = 'function'
 		dic['name']=p[1].value
+		SCOPE.name = p[1].place
 		dic['returntype']=p[6].type
 		dic['paramtype'] = paramtype
 		dic['place'] = p[1].place
@@ -1232,7 +1327,7 @@ def p_func_arg_start(p):
 		global SCOPE
 		global CSCOPE
 
-		CSCOPE = Env(SCOPE)
+		CSCOPE = Env(SCOPE,objecttype = 'function')
 		SCOPE = CSCOPE
 		child1 = create_leaf("LPAREN", p[1])
 		p[0] = Node("func_args_start", [child1])
@@ -1295,80 +1390,80 @@ def p_method_start_scope(p):
 
 
 
-# CLASS DECLARATION
-def p_class_declaration(p):
-	'''class_declaration : class_header class_body'''
-	p[0] = Node("class_declaration", [p[1], p[2]])
+# # # CLASS DECLARATION
+# def p_class_declaration(p):
+# 	'''class_declaration : class_header class_body'''
+# 	p[0] = Node("class_declaration", [p[1], p[2]])
 
 
-def p_class_header(p):
-	'''class_header : KEYWORD_CLASS simple_name class_param_clause '''
-	child1 = create_leaf("CLASS",p[1])
-	p[0] = Node("class_header",[child1,p[2],p[3]])
-	global SCOPE
-	dic = {}
-	dic['type'] = 'object'
-	dic['name'] = p[2].place
-	dic['place'] = newtemp()
-	getscope(SCOPE.pid).addentry(dic)
+# def p_class_header(p):
+# 	'''class_header : KEYWORD_CLASS simple_name class_param_clause '''
+# 	child1 = create_leaf("CLASS",p[1])
+# 	p[0] = Node("class_header",[child1,p[2],p[3]])
+# 	global SCOPE
+# 	dic = {}
+# 	dic['type'] = 'object'
+# 	dic['name'] = p[2].place
+# 	dic['place'] = newtemp()
+# 	getscope(SCOPE.pid).addentry(dic)
 
 
-def p_class_param_clause(p):
-	'''class_param_clause : func_arg_start class_params_opt RPAREN'''
-	child2 = create_leaf("RPAREN",p[3])
-	p[0] = Node("class_param_clause",[child1,p[2],child2])
+# def p_class_param_clause(p):
+# 	'''class_param_clause : func_arg_start class_params_opt RPAREN'''
+# 	child2 = create_leaf("RPAREN",p[3])
+# 	p[0] = Node("class_param_clause",[child1,p[2],child2])
 
 
-def p_class_param_opt(p):
-	'''class_params_opt : class_params
-						| empty '''
-	p[0] = Node("class_param_opt",[p[1]])
+# def p_class_param_opt(p):
+# 	'''class_params_opt : class_params
+# 						| empty '''
+# 	p[0] = Node("class_param_opt",[p[1]])
 
 
-def p_class_params(p):
-	'''class_params : class_param
-					| class_params COMMA class_param'''
-	if len(p)==2:
-		p[0] = Node("class_params",[p[1]])
-	else:
-		child1 = create_leaf("COMMA",p[2])
-		p[0] = Node("class_params",[p[1],child1,p[3]])
+# def p_class_params(p):
+# 	'''class_params : class_param
+# 					| class_params COMMA class_param'''
+# 	if len(p)==2:
+# 		p[0] = Node("class_params",[p[1]])
+# 	else:
+# 		child1 = create_leaf("COMMA",p[2])
+# 		p[0] = Node("class_params",[p[1],child1,p[3]])
 
 
-def p_class_param(p):
-	'''class_param : class_declaration_keyword_opt variable_declarator_id'''
-	p[0] = Node("class_param",[p[1],p[2],p[3]])
+# def p_class_param(p):
+# 	'''class_param : class_declaration_keyword_opt variable_declarator_id'''
+# 	p[0] = Node("class_param",[p[1],p[2],p[3]])
 
 
-def p_class_declaration_keyword_opt1(p):
-	'''class_declaration_keyword_opt : declaration_keyword'''
-	p[0] = Node("class_declaration_keyword_opt",[p[1]])
+# def p_class_declaration_keyword_opt1(p):
+# 	'''class_declaration_keyword_opt : declaration_keyword'''
+# 	p[0] = Node("class_declaration_keyword_opt",[p[1]])
 
-def p_class_declaration_keyword_opt2(p):
-	'''class_declaration_keyword_opt : empty'''
-	p[0] = Node("class_declaration_keyword_opt",[p[1]])
+# def p_class_declaration_keyword_opt2(p):
+# 	'''class_declaration_keyword_opt : empty'''
+# 	p[0] = Node("class_declaration_keyword_opt",[p[1]])
 
-def p_type_opt(p):
-	'''type_opt : COLON type
-				| empty'''
-	if len(p)==2:
-		p[0] = Node("type_opt",[p[1]])
-	else:
-		child1 = create_leaf("COLON",p[1])
-		p[0] = Node("type_opt",[child1,p[2]])
+# def p_type_opt(p):
+# 	'''type_opt : COLON type
+# 				| empty'''
+# 	if len(p)==2:
+# 		p[0] = Node("type_opt",[p[1]])
+# 	else:
+# 		child1 = create_leaf("COLON",p[1])
+# 		p[0] = Node("type_opt",[child1,p[2]])
 
-def p_class_body(p):
-	'''class_body : class_body_start block_statements_opt end_scope '''
+# def p_class_body(p):
+# 	'''class_body : class_body_start block_statements_opt end_scope '''
 
-	p[0] = Node("class_body", [p[1], p[2], p[3]])
-	# p[0] = Node("class_body", [p[1]])
+# 	p[0] = Node("class_body", [p[1], p[2], p[3]])
+# 	# p[0] = Node("class_body", [p[1]])
 
-def p_class_body_start(p):
-	'''class_body_start : BLOCKBEGIN'''
-	child1 = create_leaf("BLOCK_BEGIN", p[1])
-	p[0] = Node("class_body_start", [child1])
-	classbegin = newlabel()
-	emit([classbegin,": "])
+# def p_class_body_start(p):
+# 	'''class_body_start : BLOCKBEGIN'''
+# 	child1 = create_leaf("BLOCK_BEGIN", p[1])
+# 	p[0] = Node("class_body_start", [child1])
+# 	classbegin = newlabel()
+# 	emit([classbegin,": "])
 
 #EMPTY RULE
 def p_empty(p):
@@ -1381,6 +1476,9 @@ def p_empty(p):
 
 LEAVES = {	'KEYWORD_OBJECT',
 			'KEYWORD_EXTENDS',
+			'KEYWORD_PRINT',
+			'KEYWORD_PRINTLN',
+			'KEYWORD_SCAN',
 			'IDENTIFIER',
 			'BLOCKBEGIN','BLOCKEND',
 			'LBRAC','RBRAC',

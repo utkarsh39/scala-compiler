@@ -1,3 +1,4 @@
+/*checks recursive function, while, I/O*/
 object program{
 	def ncr(n:Int, r:Int):Int = {
 		if(r > n || r < 0){
@@ -12,6 +13,17 @@ object program{
 	}
 
 	def main():Unit = {
-		var m:Int = ncr(5,2);
+		var t,i,j,k,x:Int = 0;
+
+		scan t;
+		x = 0;
+
+		while(x < t){
+			scan i;
+			scan j;
+			k = ncr(i,j);
+			println k;
+			x += 1;
+		}
 	}
 }

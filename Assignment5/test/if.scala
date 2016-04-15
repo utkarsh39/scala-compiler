@@ -1,16 +1,15 @@
-object main {
-	var a:Array[Int] = Array[Int](1,2,3);
-	var i:Int = 0;
-	var j:Int = 0;
+object program {
+	def main():Unit = {
+		var p:Array[Int] = new Array[Int](100);
+		var i,j,k,n:Int = 0;
 
-	if(i <= 3){
-		a[i] = a[i] + 1;
-	}
-	
-	if(i >= 2){
-		a[i] = a[i] - 1;
-	}
-	else{
-		a[i] = 1;
+		scan n;
+
+		for(i <- 0 to n){
+			j = p[i];
+			k = j + i * i;
+			p[i] = k;
+			println p[i];
+		}
 	}
 }

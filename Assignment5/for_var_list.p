@@ -1,9 +1,0 @@
-(dp1
-S't2'
-p2
-S'main'
-p3
-sS't1'
-p4
-g3
-s.

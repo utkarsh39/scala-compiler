@@ -51,49 +51,76 @@ for i in range(1,len(TAC)):
 function_list = {} 				# gives info about parameters and local variables of function with name as per 3AC
 variable_list = {}
 
+def get_fscopename(id):
+	if dict_symboltable[id].objecttype == 'function' or dict_symboltable[id].objecttype == 'global':
+		return dict_symboltable[id].name
+	else:
+		return get_fscopename(dict_symboltable[id].pid)
+
 for i in range(1,len(dict_symboltable) + 1):
 	d = dict_symboltable[i].table
+	fname = get_fscopename(i)
+
+	if fname == 'global':
+		continue
+
+	local = {}
+	param = {}
+	temp = []
+	localsize = 0
+	paramsize = 0
 
 	for key in d:
-		if d[key]['type'] == 'function':
-			param = {}
-			local = {}
-			a = dict_symboltable[d[key]['tid']].table
-			# print a
-			paramsize = 0
-			localsize = 0
-			# print a
-			for key1 in a:
-				if key1 == 'return':
-					continue
-
-				if a[key1]['scopetype'] == 'param':
-					param[a[key1]['paramno']] = a[key1]['place']
-					variable_list[a[key1]['place']] = d[key]['place']
+		if d[key]['name'] == 'return':
+			continue
+			
+		if d[key]['type'] == 'Int' or d[key]['type'] == 'array':
+			if d[key]['scopetype'] == 'local':
+				dic = {}
+				dic['type'] = d[key]['type']
+				if dic['type'] == 'array':
+					dic['size'] = d[key]['size']
+					localsize += 4*d[key]['size']
+				else:
+					localsize += 4
+				local[d[key]['place']] = dic
+				variable_list[d[key]['place']] = fname
+			else:
+				dic = {}
+				dic['type'] = d[key]['type']
+				if dic['type'] == 'array':
+					dic['size'] = d[key]['size']
+					paramsize += 4*d[key]['size']
+				else:
 					paramsize += 4
+				dic['place'] = d[key]['place']
+				param[d[key]['paramno']] = dic
+				variable_list[d[key]['place']] = fname
 
-				if a[key1]['scopetype'] == 'local':
-					b = {}
-					b['type'] = a[key1]['type']
-					if b['type'] == 'array':
-						b['size'] = a[key1]['size']
-						localsize += 4*int(b['size'])
-					else:
-						localsize += 4
-					local[a[key1]['place']] = b
-					variable_list[a[key1]['place']] = d[key]['place']
-
-			tempdict = {}
-			tempdict['param'] = param
-			tempdict['local'] = local
-			tempdict['paramsize'] = paramsize
-			tempdict['localsize'] = localsize
-
-			function_list[d[key]['place']] = tempdict
+	for i in dict_symboltable[i].templist:
+		temp.append(i)
+		variable_list[i] = fname
+		localsize += 4
+	if fname in function_list:
+		function_list[fname]['local'].update(local)
+		function_list[fname]['param'].update(param)
+		function_list[fname]['temp'].extend(temp)
+		function_list[fname]['localsize'] += localsize
+		function_list[fname]['paramsize'] += paramsize
+	else:
+		function_list[fname] = {}
+		function_list[fname]['local'] = local
+		function_list[fname]['param'] = param
+		function_list[fname]['temp'] = temp
+		function_list[fname]['localsize'] = localsize
+		function_list[fname]['paramsize'] = paramsize
 
 filename = sys.argv[1]
 
 filename = filename[:-6]
+
+# print function_list
+# print variable_list
 
 pickle.dump(function_list, open(filename + '_func_list.p', 'wb'))
 pickle.dump(variable_list, open(filename + '_var_list.p', 'wb'))
