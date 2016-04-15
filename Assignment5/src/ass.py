@@ -159,11 +159,15 @@ for i in function_list:
 		else:
 			size -= 4
 		main.memad[variable] = str(size) + '($fp)'
+
+	for temp in function_list[i]['temp']:
+		size -= 4
+		main.memad[temp] = str(size) + '($fp)'
 	
 	size = 12 + (len(fun['param'])-1)*4
 
 	for i in range(1,len(fun['param']) + 1):
-		main.memad[fun['param'][i]] = str(size) + '($fp)'
+		main.memad[fun['param'][i]['place']] = str(size) + '($fp)'
 		size -= 4
 
 main.memad['return'] = '$v0'
@@ -244,18 +248,62 @@ for line in lines:
 
 
 	elif (op in ['+','-','/','*','%','&','|','^','>>','<<']):           # x = y op z  where x & y are variables and z can or cannot be
-			x = line[2]
-			y = line[3]
-			z = line[4]
+		x = line[2]
+		y = line[3]
+		z = line[4]
+
+		
+		if(z.isdigit() and y.isdigit()):
+				reg = getreg.find_reg(lno)
+				if(op == '+'):
+					val = int(y) + int(z)
+				elif(op == '-'):
+					val = int(y) - int(z)
+				elif(op == '*'):
+					val = int(y) * int(z)
+				elif(op == '/'):
+					val = int(y) / int(z)
+				elif(op == '%'):
+					val = int(y) % int(z)
+				elif(op == '^'):
+					val = int(y) ^ int(z)
+				elif(op == '>>'):
+					val = int(y) >> int(z)
+				elif(op == '<<'):
+					val = int(y) << int(z)
+				print "\t" +"li " + reg +", " + str(val)
+				UPDATE(x,reg)
+		
+		#	else:
+			#if(y.isdigit()):    # + - /
+			#	tmp = y
+			#	y = z
+			#	z= temp
+
+		else:
 			if(z.isdigit()):
+				regz = getreg.find_reg(lno)
+				print "\t" +"li " + regz +", " + str(z)	
 				reg = getreg.get_regx(x,y,lno)
 				MOVE(reg,y)
 				if (op in ['+','-','/','*','%','&','|','^']):
-					COP(NAME(op), z, reg)
+					VOP(NAME(op), regz, reg)
 				elif( op == '>>'):
-					COP('srl', z, reg)
+					VOP('srl', regz, reg)
 				elif (op == '<<'):
-					COP('sll', z, reg)
+					VOP('sll', regz, reg)
+				UPDATE(x,reg)
+			elif(y.isdigit()):
+				reg = getreg.find_reg(lno)
+				print "\t" +"li " + reg +", " + str(y)
+				regz = getreg.get_regx(x,z,lno)
+				MOVE(regz,z)
+				if (op in ['+','-','/','*','%','&','|','^']):
+					VOP(NAME(op), regz, reg)
+				elif( op == '>>'):
+					VOP('srl', regz, reg)
+				elif (op == '<<'):
+					VOP('sll', regz, reg)
 				UPDATE(x,reg)
 			else:
 				(reg,regz) = getreg.get_reg(x,y,z,lno)
