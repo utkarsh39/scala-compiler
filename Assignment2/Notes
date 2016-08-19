@@ -1,0 +1,27 @@
+Address descriptor: Store as a list with a tuple for each entry [ {s, } {m, } {r,}]
+Register descriptor: List of registers with a list for each register about which variables it stores
+In arithmetic operations, overflow is not considered
+When designing three address code, make sure 
+
+x = y op z mein agar dono digit hain to wo case skip kiya hain 
+
+getreg() will always return a register
+
+* For any array, say a[i], a can never be in register
+ 
+
+TAC Design:
+i) Operations like x = y op z where y & z both are contants are converted to the form x=y' where y' is constant and equal to y op z
+   where op can be arithmetic/binary/logical operator
+ii) x = ~ y then y must be variable
+iii) &&, ||, ! cannot be directly implemented in assembly so make appropriate changes while writing TACssss
+iv) print x (x can be variable as well as constant)
+v) If x goto line number: convert this  to if x!0 goto line number
+
+
+
+
+
+
+Parser:
+Self referential pointer is not allowed
